@@ -1,0 +1,576 @@
+---
+alwaysApply: true
+---
+
+# Chatwoot Project Structure
+
+Chatwoot is an open-source customer support platform built with Ruby on Rails and Vue.js. This rule outlines the project structure and important files/folders.
+
+## Root Directory Structure
+
+```
+chatwoot/
+├── app/                       # Main application code (Rails MVC + Vue.js)
+├── config/                    # Application configuration
+├── db/                        # Database migrations and schema
+├── lib/                       # Custom libraries and modules
+├── spec/                      # Test specifications (RSpec)
+├── public/                    # Static assets and compiled files
+├── enterprise/                # Enterprise edition features
+├── deployment/                # Deployment scripts and configurations
+├── swagger/                   # API documentation
+├── docker/                    # Docker configuration files
+├── theme/                     # Theme configuration (colors, icons)
+├── .cursor/                   # Cursor IDE configuration
+├── .github/                   # GitHub workflows and templates
+├── .vscode/                   # VS Code configuration
+└── ...                        # Configuration files
+```
+
+## Core Application Structure (`app/`)
+
+### Backend Rails Structure
+```
+app/
+├── controllers/               # API and web controllers
+├── models/                    # ActiveRecord models
+├── services/                  # Business logic services
+├── workers/                   # Background job workers
+├── jobs/                      # ActiveJob classes
+├── mailers/                   # Email handling
+├── mailboxes/                 # ActionMailbox handlers
+├── channels/                  # ActionCable channels
+├── policies/                  # Authorization policies
+├── presenters/                # View layer helpers
+├── builders/                  # Object builders
+├── finders/                   # Query objects
+├── listeners/                 # Event listeners
+├── dispatchers/               # Event dispatchers
+├── actions/                   # Action objects
+├── drops/                     # Liquid template drops
+├── dashboards/                # Admin dashboard configuration
+├── fields/                    # Form field objects
+├── helpers/                   # View helpers
+├── views/                     # Server-side templates
+└── assets/                    # Rails assets
+```
+
+### Frontend Vue.js Structure
+```
+app/javascript/
+├── dashboard/                 # Main dashboard application
+│   ├── App.vue               # Root Vue component
+│   ├── components/           # Vue components
+│   ├── components-next/      # Next-generation components
+│   ├── routes/              # Vue router configuration
+│   ├── store/               # Vuex store modules
+│   ├── api/                 # API client modules
+│   ├── mixins/              # Vue mixins
+│   ├── modules/             # Feature modules
+│   ├── i18n/                # Internationalization
+│   ├── assets/              # Frontend assets
+│   ├── composables/         # Vue composition API
+│   ├── constants/           # JavaScript constants
+│   └── helper/              # Helper functions
+├── portal/                   # Customer portal
+├── widget/                   # Embeddable chat widget
+├── sdk/                      # JavaScript SDK
+├── survey/                   # Survey functionality
+├── v3/                       # API v3 related code
+├── shared/                   # Shared components/utilities
+├── superadmin_pages/         # Super admin interface
+├── design-system/            # Design system components
+├── entrypoints/              # Vite entry points
+└── histoire.setup.ts         # Storybook/Histoire setup
+```
+
+## Configuration (`config/`)
+
+### Key Configuration Files
+```
+config/
+├── application.rb             # Main Rails application config
+├── routes.rb                  # Application routes
+├── database.yml              # Database configuration
+├── environments/             # Environment-specific configs
+├── initializers/             # Rails initializers
+├── locales/                  # I18n translation files
+├── languages/                # Language configurations
+├── integration/              # Third-party integrations
+├── features.yml              # Feature flags
+├── installation_config.yml   # Installation configuration
+├── vite.json                 # Vite configuration
+├── puma.rb                   # Puma web server config
+├── sidekiq.yml               # Background job configuration
+├── schedule.yml              # Cron job scheduling
+├── storage.yml               # Active Storage configuration
+└── secrets.yml               # Application secrets
+```
+
+## Database (`db/`)
+
+```
+db/
+├── migrate/                   # Database migrations
+├── schema.rb                 # Current database schema
+└── seeds.rb                  # Database seed data
+```
+
+## Custom Libraries (`lib/`)
+
+### Important Library Files
+```
+lib/
+├── chatwoot_app.rb           # Main application class
+├── chatwoot_hub.rb           # Hub functionality
+├── global_config.rb          # Global configuration
+├── events/                   # Event handling
+├── integrations/             # Third-party integrations
+├── webhooks/                 # Webhook handlers
+├── tasks/                    # Rake tasks
+├── seeders/                  # Database seeders
+├── redis/                    # Redis utilities
+├── filters/                  # Data filters
+├── custom_exceptions/        # Custom exception classes
+├── assets/                   # Asset handling
+└── linear/                   # Linear integration
+```
+
+## Testing (`spec/`)
+
+### Test Organization
+```
+spec/
+├── models/                   # Model tests
+├── controllers/              # Controller tests
+├── services/                 # Service tests
+├── workers/                  # Worker tests
+├── jobs/                     # Job tests
+├── requests/                 # Request tests
+├── integration/              # Integration tests
+├── factories/                # Test factories
+├── fixtures/                 # Test fixtures
+├── support/                  # Test support files
+├── rails_helper.rb           # Rails test configuration
+├── spec_helper.rb            # RSpec configuration
+└── test_helper.rb            # Test helper
+```
+
+## Enterprise Features (`enterprise/`)
+
+```
+enterprise/
+├── app/                      # Enterprise-specific code
+├── config/                   # Enterprise configuration
+├── lib/                      # Enterprise libraries
+└── LICENSE                   # Enterprise license
+```
+
+## Static Assets (`public/`)
+
+```
+public/
+├── assets/                   # Compiled assets
+├── brand-assets/             # Brand assets
+├── dashboard/                # Dashboard static files
+├── integrations/             # Integration assets
+├── downloads/                # Downloadable files
+├── audio/                    # Audio files
+├── favicon-*.png             # Favicon files
+├── manifest.json             # Web app manifest
+├── robots.txt                # Search engine robots
+├── sw.js                     # Service worker
+└── *.html                    # Error pages (404, 500, etc.)
+```
+
+## Deployment & DevOps
+
+### Deployment Files
+```
+deployment/
+├── setup_20.04.sh            # Ubuntu 20.04 setup script
+├── setup_18.04.sh            # Ubuntu 18.04 setup script
+├── nginx_chatwoot.conf       # Nginx configuration
+├── chatwoot-*.service        # Systemd service files
+├── chatwoot.target           # Systemd target
+└── chatwoot                  # Service script
+```
+
+### Docker Configuration
+```
+docker/
+└── (Docker-related files)
+
+# Root Docker files
+docker-compose.yaml           # Development Docker setup
+docker-compose.production.yaml # Production Docker setup
+docker-compose.test.yaml      # Test Docker setup
+Dockerfile                    # (if present)
+.dockerignore                 # Docker ignore patterns
+```
+
+## Configuration Files (Root)
+
+### Development & Build
+- `package.json` - Node.js dependencies and scripts
+- `pnpm-lock.yaml` - Package manager lock file
+- `vite.config.ts` - Vite build configuration
+- `tailwind.config.js` - TailwindCSS configuration
+- `postcss.config.js` - PostCSS configuration
+- `histoire.config.ts` - Histoire (Storybook) configuration
+- `vitest.setup.js` - Vitest test configuration
+
+### Ruby & Rails
+- `Gemfile` - Ruby gem dependencies
+- `Gemfile.lock` - Ruby gem lock file
+- `Rakefile` - Rake tasks
+- `config.ru` - Rack configuration
+- `Capfile` - Capistrano deployment
+- `Procfile*` - Process definitions for deployment
+
+### Code Quality & CI/CD
+- `.eslintrc.js` - ESLint configuration
+- `.rubocop.yml` - RuboCop Ruby linter
+- `.prettierrc` - Prettier code formatter
+- `.scss-lint.yml` - SCSS linting
+- `.rspec` - RSpec configuration
+- `.circleci/` - CircleCI configuration
+- `.github/` - GitHub Actions workflows
+
+### Theme & Design
+```
+theme/
+├── colors.js                 # Color palette definitions
+└── icons.js                  # Icon definitions
+```
+
+## API Documentation (`swagger/`)
+
+```
+swagger/
+├── swagger.json              # OpenAPI specification
+├── index.yml                 # Swagger index
+├── index.html                # Swagger UI
+├── paths/                    # API endpoint definitions
+├── definitions/              # API model definitions
+├── parameters/               # API parameter definitions
+└── tag_groups/               # API tag groupings
+```
+
+## Development Guidelines
+
+### File Organization Principles
+1. **MVC Pattern**: Follow Rails MVC structure for backend
+2. **Component-Based**: Use Vue.js components for frontend
+3. **Feature Modules**: Organize by feature in `modules/`
+4. **Shared Code**: Common utilities in `shared/`
+5. **Enterprise Separation**: Keep enterprise features isolated
+
+### Important File Naming
+- Ruby files: `snake_case.rb`
+- Vue components: `PascalCase.vue`
+- JavaScript: `camelCase.js`
+- Stylesheets: `kebab-case.scss`
+- Test files: `*_spec.rb` for RSpec
+
+### Key Entry Points
+- **Main App**: `app/javascript/dashboard/App.vue`
+- **Widget**: `app/javascript/widget/`
+- **API**: `config/routes.rb`
+- **Background Jobs**: `app/workers/`
+- **Database**: `db/schema.rb`
+
+### Development Environment
+- **Frontend**: Vite (configured in `vite.config.ts`)
+- **Backend**: Rails (configured in `config/application.rb`)
+- **Database**: PostgreSQL (configured in `config/database.yml`)
+- **Cache**: Redis (configured in `config/redis.yml`)
+- **Jobs**: Sidekiq (configured in `config/sidekiq.yml`)
+
+This structure supports a modern, scalable customer support platform with clear separation of concerns and modular architecture.
+# Chatwoot Project Structure
+
+Chatwoot is an open-source customer support platform built with Ruby on Rails and Vue.js. This rule outlines the project structure and important files/folders.
+
+## Root Directory Structure
+
+```
+chatwoot/
+├── app/                       # Main application code (Rails MVC + Vue.js)
+├── config/                    # Application configuration
+├── db/                        # Database migrations and schema
+├── lib/                       # Custom libraries and modules
+├── spec/                      # Test specifications (RSpec)
+├── public/                    # Static assets and compiled files
+├── enterprise/                # Enterprise edition features
+├── deployment/                # Deployment scripts and configurations
+├── swagger/                   # API documentation
+├── docker/                    # Docker configuration files
+├── theme/                     # Theme configuration (colors, icons)
+├── .cursor/                   # Cursor IDE configuration
+├── .github/                   # GitHub workflows and templates
+├── .vscode/                   # VS Code configuration
+└── ...                        # Configuration files
+```
+
+## Core Application Structure (`app/`)
+
+### Backend Rails Structure
+```
+app/
+├── controllers/               # API and web controllers
+├── models/                    # ActiveRecord models
+├── services/                  # Business logic services
+├── workers/                   # Background job workers
+├── jobs/                      # ActiveJob classes
+├── mailers/                   # Email handling
+├── mailboxes/                 # ActionMailbox handlers
+├── channels/                  # ActionCable channels
+├── policies/                  # Authorization policies
+├── presenters/                # View layer helpers
+├── builders/                  # Object builders
+├── finders/                   # Query objects
+├── listeners/                 # Event listeners
+├── dispatchers/               # Event dispatchers
+├── actions/                   # Action objects
+├── drops/                     # Liquid template drops
+├── dashboards/                # Admin dashboard configuration
+├── fields/                    # Form field objects
+├── helpers/                   # View helpers
+├── views/                     # Server-side templates
+└── assets/                    # Rails assets
+```
+
+### Frontend Vue.js Structure
+```
+app/javascript/
+├── dashboard/                 # Main dashboard application
+│   ├── App.vue               # Root Vue component
+│   ├── components/           # Vue components
+│   ├── components-next/      # Next-generation components
+│   ├── routes/              # Vue router configuration
+│   ├── store/               # Vuex store modules
+│   ├── api/                 # API client modules
+│   ├── mixins/              # Vue mixins
+│   ├── modules/             # Feature modules
+│   ├── i18n/                # Internationalization
+│   ├── assets/              # Frontend assets
+│   ├── composables/         # Vue composition API
+│   ├── constants/           # JavaScript constants
+│   └── helper/              # Helper functions
+├── portal/                   # Customer portal
+├── widget/                   # Embeddable chat widget
+├── sdk/                      # JavaScript SDK
+├── survey/                   # Survey functionality
+├── v3/                       # API v3 related code
+├── shared/                   # Shared components/utilities
+├── superadmin_pages/         # Super admin interface
+├── design-system/            # Design system components
+├── entrypoints/              # Vite entry points
+└── histoire.setup.ts         # Storybook/Histoire setup
+```
+
+## Configuration (`config/`)
+
+### Key Configuration Files
+```
+config/
+├── application.rb             # Main Rails application config
+├── routes.rb                  # Application routes
+├── database.yml              # Database configuration
+├── environments/             # Environment-specific configs
+├── initializers/             # Rails initializers
+├── locales/                  # I18n translation files
+├── languages/                # Language configurations
+├── integration/              # Third-party integrations
+├── features.yml              # Feature flags
+├── installation_config.yml   # Installation configuration
+├── vite.json                 # Vite configuration
+├── puma.rb                   # Puma web server config
+├── sidekiq.yml               # Background job configuration
+├── schedule.yml              # Cron job scheduling
+├── storage.yml               # Active Storage configuration
+└── secrets.yml               # Application secrets
+```
+
+## Database (`db/`)
+
+```
+db/
+├── migrate/                   # Database migrations
+├── schema.rb                 # Current database schema
+└── seeds.rb                  # Database seed data
+```
+
+## Custom Libraries (`lib/`)
+
+### Important Library Files
+```
+lib/
+├── chatwoot_app.rb           # Main application class
+├── chatwoot_hub.rb           # Hub functionality
+├── global_config.rb          # Global configuration
+├── events/                   # Event handling
+├── integrations/             # Third-party integrations
+├── webhooks/                 # Webhook handlers
+├── tasks/                    # Rake tasks
+├── seeders/                  # Database seeders
+├── redis/                    # Redis utilities
+├── filters/                  # Data filters
+├── custom_exceptions/        # Custom exception classes
+├── assets/                   # Asset handling
+└── linear/                   # Linear integration
+```
+
+## Testing (`spec/`)
+
+### Test Organization
+```
+spec/
+├── models/                   # Model tests
+├── controllers/              # Controller tests
+├── services/                 # Service tests
+├── workers/                  # Worker tests
+├── jobs/                     # Job tests
+├── requests/                 # Request tests
+├── integration/              # Integration tests
+├── factories/                # Test factories
+├── fixtures/                 # Test fixtures
+├── support/                  # Test support files
+├── rails_helper.rb           # Rails test configuration
+├── spec_helper.rb            # RSpec configuration
+└── test_helper.rb            # Test helper
+```
+
+## Enterprise Features (`enterprise/`)
+
+```
+enterprise/
+├── app/                      # Enterprise-specific code
+├── config/                   # Enterprise configuration
+├── lib/                      # Enterprise libraries
+└── LICENSE                   # Enterprise license
+```
+
+## Static Assets (`public/`)
+
+```
+public/
+├── assets/                   # Compiled assets
+├── brand-assets/             # Brand assets
+├── dashboard/                # Dashboard static files
+├── integrations/             # Integration assets
+├── downloads/                # Downloadable files
+├── audio/                    # Audio files
+├── favicon-*.png             # Favicon files
+├── manifest.json             # Web app manifest
+├── robots.txt                # Search engine robots
+├── sw.js                     # Service worker
+└── *.html                    # Error pages (404, 500, etc.)
+```
+
+## Deployment & DevOps
+
+### Deployment Files
+```
+deployment/
+├── setup_20.04.sh            # Ubuntu 20.04 setup script
+├── setup_18.04.sh            # Ubuntu 18.04 setup script
+├── nginx_chatwoot.conf       # Nginx configuration
+├── chatwoot-*.service        # Systemd service files
+├── chatwoot.target           # Systemd target
+└── chatwoot                  # Service script
+```
+
+### Docker Configuration
+```
+docker/
+└── (Docker-related files)
+
+# Root Docker files
+docker-compose.yaml           # Development Docker setup
+docker-compose.production.yaml # Production Docker setup
+docker-compose.test.yaml      # Test Docker setup
+Dockerfile                    # (if present)
+.dockerignore                 # Docker ignore patterns
+```
+
+## Configuration Files (Root)
+
+### Development & Build
+- `package.json` - Node.js dependencies and scripts
+- `pnpm-lock.yaml` - Package manager lock file
+- `vite.config.ts` - Vite build configuration
+- `tailwind.config.js` - TailwindCSS configuration
+- `postcss.config.js` - PostCSS configuration
+- `histoire.config.ts` - Histoire (Storybook) configuration
+- `vitest.setup.js` - Vitest test configuration
+
+### Ruby & Rails
+- `Gemfile` - Ruby gem dependencies
+- `Gemfile.lock` - Ruby gem lock file
+- `Rakefile` - Rake tasks
+- `config.ru` - Rack configuration
+- `Capfile` - Capistrano deployment
+- `Procfile*` - Process definitions for deployment
+
+### Code Quality & CI/CD
+- `.eslintrc.js` - ESLint configuration
+- `.rubocop.yml` - RuboCop Ruby linter
+- `.prettierrc` - Prettier code formatter
+- `.scss-lint.yml` - SCSS linting
+- `.rspec` - RSpec configuration
+- `.circleci/` - CircleCI configuration
+- `.github/` - GitHub Actions workflows
+
+### Theme & Design
+```
+theme/
+├── colors.js                 # Color palette definitions
+└── icons.js                  # Icon definitions
+```
+
+## API Documentation (`swagger/`)
+
+```
+swagger/
+├── swagger.json              # OpenAPI specification
+├── index.yml                 # Swagger index
+├── index.html                # Swagger UI
+├── paths/                    # API endpoint definitions
+├── definitions/              # API model definitions
+├── parameters/               # API parameter definitions
+└── tag_groups/               # API tag groupings
+```
+
+## Development Guidelines
+
+### File Organization Principles
+1. **MVC Pattern**: Follow Rails MVC structure for backend
+2. **Component-Based**: Use Vue.js components for frontend
+3. **Feature Modules**: Organize by feature in `modules/`
+4. **Shared Code**: Common utilities in `shared/`
+5. **Enterprise Separation**: Keep enterprise features isolated
+
+### Important File Naming
+- Ruby files: `snake_case.rb`
+- Vue components: `PascalCase.vue`
+- JavaScript: `camelCase.js`
+- Stylesheets: `kebab-case.scss`
+- Test files: `*_spec.rb` for RSpec
+
+### Key Entry Points
+- **Main App**: `app/javascript/dashboard/App.vue`
+- **Widget**: `app/javascript/widget/`
+- **API**: `config/routes.rb`
+- **Background Jobs**: `app/workers/`
+- **Database**: `db/schema.rb`
+
+### Development Environment
+- **Frontend**: Vite (configured in `vite.config.ts`)
+- **Backend**: Rails (configured in `config/application.rb`)
+- **Database**: PostgreSQL (configured in `config/database.yml`)
+- **Cache**: Redis (configured in `config/redis.yml`)
+- **Jobs**: Sidekiq (configured in `config/sidekiq.yml`)
+
+This structure supports a modern, scalable customer support platform with clear separation of concerns and modular architecture.
