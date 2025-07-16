@@ -1,0 +1,129 @@
+# Development Safeguards Configuration
+# This file lists the environment variables and settings that actually work
+# to disable external services and prevent conflicts during development
+
+# =============================================================================
+# CHATWOOT HUB SYNC DISABLE (ACTUALLY WORKS)
+# =============================================================================
+# Prevents Chatwoot from syncing license data with external servers
+# This is the ONLY environment variable that Chatwoot actually checks
+DISABLE_TELEMETRY: true
+
+# =============================================================================
+# ENTERPRISE MODE ENABLE
+# =============================================================================
+# Enables enterprise features for development
+DISABLE_ENTERPRISE: false
+CW_EDITION: enterprise
+
+# =============================================================================
+# INSTALLATION CONFIGURATION
+# =============================================================================
+# These settings will be applied to InstallationConfig
+installation_configs:
+  INSTALLATION_PRICING_PLAN: premium
+  INSTALLATION_PRICING_PLAN_QUANTITY: "999999"
+  DISABLE_HUB_SYNC: "true"
+
+# =============================================================================
+# ACCOUNT CUSTOM ATTRIBUTES CLEANUP
+# =============================================================================
+# Stripe-related attributes to remove from accounts
+# This prevents billing conflicts during development
+stripe_attributes_to_remove:
+  - stripe_customer_id
+  - stripe_price_id
+  - stripe_product_id
+  - plan_name
+  - subscribed_quantity
+  - subscription_status
+  - subscription_ends_on
+
+# =============================================================================
+# ENTERPRISE FEATURES TO ENABLE
+# =============================================================================
+enterprise_features:
+  - captain_integration
+  - custom_branding
+  - audit_logs
+  - disable_branding
+  - agent_capacity
+  - inbound_emails
+  - help_center
+  - campaigns
+  - team_management
+  - channel_twitter
+  - channel_facebook
+  - channel_email
+  - channel_instagram
+  - sla
+  - custom_roles
+
+# =============================================================================
+# USAGE LIMITS RESET
+# =============================================================================
+# Reset usage limits for development
+usage_limits:
+  captain_responses: 0
+  captain_documents: 0
+  agents: 999999
+  inboxes: 999999
+
+# =============================================================================
+# EXTERNAL SERVICES (YOUR OWN API KEYS)
+# =============================================================================
+# These services work with YOUR API keys regardless of development mode
+# Chatwoot doesn't disable these - you can use them normally
+external_services_you_can_use:
+  - twilio
+  - sentry
+  - new_relic
+  - datadog
+  - facebook_messenger
+  - slack
+  - linear
+  - notion
+  - shopify
+  - instagram
+  - clearbit
+  - geocoder
+
+# =============================================================================
+# WHAT ACTUALLY WORKS VS WHAT DOESN'T
+# =============================================================================
+working_safeguards:
+  # ✅ These actually work:
+  - DISABLE_TELEMETRY: "Disables Chatwoot Hub sync (license validation)"
+  - Clear version cache: "Disables update notifications (rake task)"
+  - Clear Stripe data: "Prevents billing conflicts"
+  - Set premium plan: "Enables enterprise features"
+  - Set unlimited licenses: "Removes user limits"
+
+non_working_safeguards:
+  # ❌ These don't work (Chatwoot doesn't check them):
+  - DISABLE_EXTERNAL_APIS: "Chatwoot ignores this variable"
+  - DISABLE_THIRD_PARTY_SERVICES: "Chatwoot ignores this variable"
+  - DISABLE_VERSION_CHECK: "Chatwoot ignores this variable (use rake task instead)"
+  - DISABLE_BILLING_EVENTS: "Chatwoot ignores this variable"
+
+# =============================================================================
+# USAGE INSTRUCTIONS
+# =============================================================================
+# To apply these settings:
+#
+# 1. Copy relevant environment variables to your .env file
+# 2. Run: rails chatwoot:dev:setup_dev_environment
+# 3. Or run individual commands:
+#    - rails chatwoot:dev:disable_hub_sync
+#    - rails chatwoot:dev:disable_version_checks
+#    - rails chatwoot:dev:clear_stripe_data
+#
+# To restore production settings:
+# Run: rails chatwoot:dev:disable_enterprise
+#
+# ⚠️  WARNING: These settings are for development only!
+# ⚠️  Never use in production environments!
+# ⚠️  Always use proper enterprise licenses for production!
+#
+# 💡 NOTE: External services (Twilio, Sentry, etc.) work normally
+# 💡 with your own API keys regardless of these settings. 
