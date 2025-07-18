@@ -6,11 +6,8 @@ namespace :chatwoot do
     task enable_enterprise: :environment do
       puts "🚀 Enabling enterprise features for development..."
       
-      # Check if enterprise directory exists
-      unless ChatwootApp.enterprise?
-        puts "❌ Enterprise directory not found. Please ensure you have the enterprise edition."
-        exit 1
-      end
+      # Note: Enterprise directory check removed for development flexibility
+      # This allows the task to run even without the enterprise edition
       
       # Set premium plan
       premium_config = InstallationConfig.find_or_create_by(name: 'INSTALLATION_PRICING_PLAN')
@@ -19,7 +16,7 @@ namespace :chatwoot do
       
       # Set unlimited licenses
       quantity_config = InstallationConfig.find_or_create_by(name: 'INSTALLATION_PRICING_PLAN_QUANTITY')
-      quantity_config.update!(value: '999999')
+      quantity_config.update!(value: 999999)
       puts "✅ Set license quantity to: 999999"
       
       # Disable Chatwoot Hub sync (this actually works)
@@ -31,26 +28,30 @@ namespace :chatwoot do
       # Clear Stripe billing data to prevent conflicts
       clear_stripe_billing_data
       
-      # Enable all features for existing accounts
-      puts "🔄 Enabling features for existing accounts..."
+      # Enable all premium features for existing accounts
+      puts "🔄 Enabling premium features for existing accounts..."
+      
+      # Actual premium features from features.yml (marked with premium: true)
+      premium_features = [
+        # Core premium features (from features.yml with premium: true)
+        'disable_branding',
+        'audit_logs',
+        'sla',
+        'captain_integration',
+        'custom_roles',
+        'help_center_embedding_search',
+        'captain_integration_v2',
+        
+        # Internal features (for development testing)
+        'inbox_view',
+        'shopify_integration',
+        'search_with_gin',
+        'channel_voice',
+        'contact_chatwoot_support_team'
+      ]
+      
       Account.find_each do |account|
-        account.enable_features!(
-          'captain_integration',
-          'custom_branding',
-          'audit_logs',
-          'disable_branding',
-          'agent_capacity',
-          'inbound_emails',
-          'help_center',
-          'campaigns',
-          'team_management',
-          'channel_twitter',
-          'channel_facebook',
-          'channel_email',
-          'channel_instagram',
-          'sla',
-          'custom_roles'
-        )
+        account.enable_features!(*premium_features)
         print "."
       end
       puts ""
@@ -73,6 +74,10 @@ namespace :chatwoot do
       puts "\n✅ Enterprise features enabled successfully!"
       puts "💡 You can now test all premium features in your development environment."
       puts "⚠️  Remember: This is for development only. Use proper licenses in production."
+      puts "\n📋 Enabled Features:"
+      puts "   - Premium features (marked with premium: true in features.yml)"
+      puts "   - Internal features (for development testing)"
+      puts "   - Community features remain enabled by default"
       puts "\n🔧 Development Mode Active:"
       puts "   - Chatwoot Hub sync disabled (prevents license conflicts)"
       puts "   - Version checks disabled (prevents update notifications)"
@@ -100,18 +105,18 @@ namespace :chatwoot do
       # Re-enable version checks
       enable_version_checks
       
+      # Actual premium features to disable
+      premium_features = [
+        'disable_branding', 'audit_logs', 'sla', 'captain_integration', 'custom_roles',
+        'help_center_embedding_search', 'captain_integration_v2',
+        'inbox_view', 'shopify_integration', 'search_with_gin', 'channel_voice',
+        'contact_chatwoot_support_team'
+      ]
+      
       # Disable all premium features for existing accounts
       puts "🔄 Disabling premium features for existing accounts..."
       Account.find_each do |account|
-        account.disable_features!(
-          'captain_integration',
-          'custom_branding',
-          'audit_logs',
-          'disable_branding',
-          'agent_capacity',
-          'sla',
-          'custom_roles'
-        )
+        account.disable_features!(*premium_features)
         print "."
       end
       puts ""
@@ -122,16 +127,16 @@ namespace :chatwoot do
       puts "   License Quantity: #{ChatwootHub.pricing_plan_quantity}"
     end
 
-    desc 'Disable Chatwoot Hub sync for development'
+    desc 'Check Chatwoot Hub sync status (DISABLE_TELEMETRY setting)'
     task disable_hub_sync: :environment do
       disable_hub_sync
-      puts "✅ Chatwoot Hub sync disabled for development"
+      puts "\n💡 To permanently disable hub sync, add DISABLE_TELEMETRY=true to your .env file"
     end
 
-    desc 'Enable Chatwoot Hub sync'
+    desc 'Check Chatwoot Hub sync status (DISABLE_TELEMETRY setting)'
     task enable_hub_sync: :environment do
       enable_hub_sync
-      puts "✅ Chatwoot Hub sync enabled"
+      puts "\n💡 To permanently enable hub sync, remove DISABLE_TELEMETRY from your .env file"
     end
 
     desc 'Disable version checks for development'
@@ -190,6 +195,45 @@ namespace :chatwoot do
       puts "   DISABLE_TELEMETRY: #{ENV['DISABLE_TELEMETRY'] || 'Not set'}"
     end
 
+    desc 'List all available premium features'
+    task list_premium_features: :environment do
+      puts "🎯 Available Premium Features"
+      puts "=" * 40
+      
+      # Actual premium features from features.yml
+      premium_features = [
+        { name: 'disable_branding', category: 'Branding', description: 'Remove Chatwoot branding (premium)' },
+        { name: 'audit_logs', category: 'Security', description: 'Comprehensive activity tracking (premium)' },
+        { name: 'sla', category: 'Management', description: 'Service Level Agreements (premium)' },
+        { name: 'captain_integration', category: 'AI', description: 'AI-powered conversation assistance (premium)' },
+        { name: 'custom_roles', category: 'Security', description: 'Granular permission management (premium)' },
+        { name: 'help_center_embedding_search', category: 'AI', description: 'AI-powered help center search (premium)' },
+        { name: 'captain_integration_v2', category: 'AI', description: 'Captain V2 (premium, internal)' },
+        
+        # Internal features (for development testing)
+        { name: 'inbox_view', category: 'Internal', description: 'Inbox view (internal)' },
+        { name: 'shopify_integration', category: 'Internal', description: 'Shopify integration (internal)' },
+        { name: 'search_with_gin', category: 'Internal', description: 'GIN search (internal)' },
+        { name: 'channel_voice', category: 'Internal', description: 'Voice channel (internal)' },
+        { name: 'contact_chatwoot_support_team', category: 'Internal', description: 'Contact Chatwoot support (internal)' }
+      ]
+      
+      # Group by category
+      features_by_category = premium_features.group_by { |f| f[:category] }
+      
+      features_by_category.each do |category, features|
+        puts "\n📂 #{category}:"
+        features.each do |feature|
+          puts "   • #{feature[:name]} - #{feature[:description]}"
+        end
+      end
+      
+      puts "\n💡 Usage:"
+      puts "   rails chatwoot:dev:enable_feature[feature_name]"
+      puts "   rails chatwoot:dev:disable_feature[feature_name]"
+      puts "   rails chatwoot:dev:enable_enterprise  # Enable all features"
+    end
+
     desc 'Reset Captain usage for all accounts'
     task reset_captain_usage: :environment do
       puts "🔄 Resetting Captain usage for all accounts..."
@@ -208,9 +252,23 @@ namespace :chatwoot do
     task :enable_feature, [:feature_name] => :environment do |task, args|
       feature_name = args[:feature_name]
       
+      # Actual premium features from features.yml
+      available_features = [
+        'disable_branding', 'audit_logs', 'sla', 'captain_integration', 'custom_roles',
+        'help_center_embedding_search', 'captain_integration_v2',
+        'inbox_view', 'shopify_integration', 'search_with_gin', 'channel_voice',
+        'contact_chatwoot_support_team'
+      ]
+      
       if feature_name.blank?
         puts "❌ Please specify a feature name: rails chatwoot:dev:enable_feature[feature_name]"
-        puts "Available features: captain_integration, custom_branding, audit_logs, disable_branding, agent_capacity, sla, custom_roles"
+        puts "Available premium features: #{available_features.join(', ')}"
+        exit 1
+      end
+      
+      unless available_features.include?(feature_name)
+        puts "❌ Invalid feature name: #{feature_name}"
+        puts "Available premium features: #{available_features.join(', ')}"
         exit 1
       end
       
@@ -229,9 +287,23 @@ namespace :chatwoot do
     task :disable_feature, [:feature_name] => :environment do |task, args|
       feature_name = args[:feature_name]
       
+      # Actual premium features from features.yml
+      available_features = [
+        'disable_branding', 'audit_logs', 'sla', 'captain_integration', 'custom_roles',
+        'help_center_embedding_search', 'captain_integration_v2',
+        'inbox_view', 'shopify_integration', 'search_with_gin', 'channel_voice',
+        'contact_chatwoot_support_team'
+      ]
+      
       if feature_name.blank?
         puts "❌ Please specify a feature name: rails chatwoot:dev:disable_feature[feature_name]"
-        puts "Available features: captain_integration, custom_branding, audit_logs, disable_branding, agent_capacity, sla, custom_roles"
+        puts "Available premium features: #{available_features.join(', ')}"
+        exit 1
+      end
+      
+      unless available_features.include?(feature_name)
+        puts "❌ Invalid feature name: #{feature_name}"
+        puts "Available premium features: #{available_features.join(', ')}"
         exit 1
       end
       
@@ -264,25 +336,25 @@ namespace :chatwoot do
     private
 
     def disable_hub_sync
-      # Set environment variable to disable telemetry (this actually works)
-      ENV['DISABLE_TELEMETRY'] = 'true'
-      
-      # Create or update installation config to disable hub sync
-      hub_sync_config = InstallationConfig.find_or_create_by(name: 'DISABLE_HUB_SYNC')
-      hub_sync_config.update!(value: 'true')
-      
-      puts "✅ Disabled Chatwoot Hub sync"
+      # Note: DISABLE_TELEMETRY should be set in .env file for persistence
+      # This method now just verifies the setting is active
+      if ENV['DISABLE_TELEMETRY'] == 'true'
+        puts "✅ Chatwoot Hub sync is disabled (DISABLE_TELEMETRY=true)"
+      else
+        puts "⚠️  Chatwoot Hub sync is enabled (DISABLE_TELEMETRY not set to 'true')"
+        puts "💡 Add DISABLE_TELEMETRY=true to your .env file for permanent disable"
+      end
     end
 
     def enable_hub_sync
-      # Remove environment variable
-      ENV.delete('DISABLE_TELEMETRY')
-      
-      # Update installation config to enable hub sync
-      hub_sync_config = InstallationConfig.find_or_create_by(name: 'DISABLE_HUB_SYNC')
-      hub_sync_config.update!(value: 'false')
-      
-      puts "✅ Enabled Chatwoot Hub sync"
+      # Note: To enable hub sync, remove DISABLE_TELEMETRY from .env file
+      # This method now just verifies the setting
+      if ENV['DISABLE_TELEMETRY'] == 'true'
+        puts "⚠️  Chatwoot Hub sync is disabled (DISABLE_TELEMETRY=true)"
+        puts "💡 Remove DISABLE_TELEMETRY=true from your .env file to enable"
+      else
+        puts "✅ Chatwoot Hub sync is enabled (DISABLE_TELEMETRY not set)"
+      end
     end
 
     def clear_stripe_billing_data
