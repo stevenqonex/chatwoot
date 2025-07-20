@@ -2,9 +2,33 @@
 
 namespace :chatwoot do
   namespace :dev do
-    desc 'Enable all enterprise features for development'
+    desc 'Enable all enterprise features (development or production with safeguards)'
     task enable_enterprise: :environment do
-      puts "🚀 Enabling enterprise features for development..."
+      # Temporarily reduce logging for cleaner output
+      old_log_level = Rails.logger.level
+      Rails.logger.level = Logger::INFO
+      
+      is_production = Rails.env.production?
+      
+
+      
+      if is_production
+        puts "🚨 PRODUCTION ENVIRONMENT DETECTED 🚨"
+        puts "=" * 50
+        puts "⚠️  This will enable enterprise features in production"      
+        print "Do you understand the risks and want to proceed? (type 'YES' to continue): "
+        confirmation = $stdin.gets.chomp
+        
+        unless confirmation == 'YES'
+          puts "❌ Operation cancelled. No changes made."
+          exit 0
+        end
+        
+        puts "\n🚀 Enabling enterprise features for production..."
+      else
+        puts "🚀 Enabling enterprise features for development..."
+        puts "💡 To run in production mode, use: RAILS_ENV=production rails chatwoot:dev:enable_enterprise"
+      end
       
       # Note: Enterprise directory check removed for development flexibility
       # This allows the task to run even without the enterprise edition
@@ -42,7 +66,7 @@ namespace :chatwoot do
         'help_center_embedding_search',
         'captain_integration_v2',
         
-        # Internal features (for development testing)
+        # Internal features
         'inbox_view',
         'shopify_integration',
         'search_with_gin',
@@ -58,6 +82,7 @@ namespace :chatwoot do
       
       # Verify configuration
       puts "\n📊 Current Configuration:"
+      puts "   Environment: #{Rails.env}"
       puts "   Plan: #{ChatwootHub.pricing_plan}"
       puts "   License Quantity: #{ChatwootHub.pricing_plan_quantity}"
       puts "   Enterprise Enabled: #{ChatwootApp.enterprise?}"
@@ -71,21 +96,35 @@ namespace :chatwoot do
         puts "   Enabled Features: #{first_account.enabled_features.keys.join(', ')}"
       end
       
-      puts "\n✅ Enterprise features enabled successfully!"
-      puts "💡 You can now test all premium features in your development environment."
-      puts "⚠️  Remember: This is for development only. Use proper licenses in production."
-      puts "\n📋 Enabled Features:"
-      puts "   - Premium features (marked with premium: true in features.yml)"
-      puts "   - Internal features (for development testing)"
-      puts "   - Community features remain enabled by default"
-      puts "\n🔧 Development Mode Active:"
-      puts "   - Chatwoot Hub sync disabled (prevents license conflicts)"
-      puts "   - Version checks disabled (prevents update notifications)"
-      puts "   - Stripe billing data cleared (prevents billing conflicts)"
-      puts "   - External services still work with your API keys"
+      if is_production
+        puts "\n✅ Enterprise features enabled successfully for production!"
+        puts "\n📋 Enabled Features:"
+        puts "   - Premium features (marked with premium: true in features.yml)"
+        puts "   - Internal features (for production testing)"
+        puts "   - Community features remain enabled by default"
+        puts "\n🔧 Production Safeguards Active:"
+        puts "   - Chatwoot Hub sync disabled (prevents license validation)"
+        puts "   - Version checks disabled (prevents update notifications)"
+        puts "   - Stripe billing data cleared (prevents billing conflicts)"
+        puts "   - External services still work with your API keys"
+      else
+        puts "\n✅ Enterprise features enabled successfully!"
+        puts "\n📋 Enabled Features:"
+        puts "   - Premium features (marked with premium: true in features.yml)"
+        puts "   - Internal features (for development testing)"
+        puts "   - Community features remain enabled by default"
+        puts "\n🔧 Development Mode Active:"
+        puts "   - Chatwoot Hub sync disabled (prevents license conflicts)"
+        puts "   - Version checks disabled (prevents update notifications)"
+        puts "   - Stripe billing data cleared (prevents billing conflicts)"
+        puts "   - External services still work with your API keys"
+      end
+      
+      # Restore original log level
+      Rails.logger.level = old_log_level
     end
 
-    desc 'Disable enterprise features (reset to community)'
+    desc 'Disable enterprise features'
     task disable_enterprise: :environment do
       puts "🔄 Disabling enterprise features..."
       
@@ -162,10 +201,10 @@ namespace :chatwoot do
       puts "📊 Enterprise Configuration Status"
       puts "=" * 40
       
+      puts "Environment: #{Rails.env}"
       puts "Enterprise Directory: #{ChatwootApp.enterprise? ? '✅ Present' : '❌ Not Found'}"
       puts "Current Plan: #{ChatwootHub.pricing_plan}"
       puts "License Quantity: #{ChatwootHub.pricing_plan_quantity}"
-      puts "Environment: #{Rails.env}"
       
       puts "\n🔧 Development Mode Status:"
       puts "   Hub Sync: #{ENV['DISABLE_TELEMETRY'] == 'true' ? '❌ Disabled' : '✅ Enabled'}"
@@ -193,6 +232,10 @@ namespace :chatwoot do
       puts "   DISABLE_ENTERPRISE: #{ENV['DISABLE_ENTERPRISE'] || 'Not set'}"
       puts "   CW_EDITION: #{ENV['CW_EDITION'] || 'Not set'}"
       puts "   DISABLE_TELEMETRY: #{ENV['DISABLE_TELEMETRY'] || 'Not set'}"
+      
+      if Rails.env.production?
+        puts "\n🚨 PRODUCTION ENVIRONMENT DETECTED"
+      end
     end
 
     desc 'List all available premium features'
@@ -231,7 +274,7 @@ namespace :chatwoot do
       puts "\n💡 Usage:"
       puts "   rails chatwoot:dev:enable_feature[feature_name]"
       puts "   rails chatwoot:dev:disable_feature[feature_name]"
-      puts "   rails chatwoot:dev:enable_enterprise  # Enable all features"
+      puts "   rails chatwoot:dev:enable_enterprise  # Enable all features (any environment)"
     end
 
     desc 'Reset Captain usage for all accounts'
@@ -345,6 +388,8 @@ namespace :chatwoot do
         puts "💡 Add DISABLE_TELEMETRY=true to your .env file for permanent disable"
       end
     end
+
+
 
     def enable_hub_sync
       # Note: To enable hub sync, remove DISABLE_TELEMETRY from .env file
