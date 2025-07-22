@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chatwoot-ingress
+  namespace: chatwoot
+  annotations:
+    # SSL/TLS Configuration
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # File Upload Limits (Chatwoot supports file uploads)
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/client-max-body-size: "100m"
+    
+    # Timeout Configuration for long-running requests
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    
+    # WebSocket Support for ActionCable (Real-time messaging)
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/proxy-set-headers: "Connection $http_connection"
+    nginx.ingress.kubernetes.io/proxy-set-headers: "Upgrade $http_upgrade"
+    nginx.ingress.kubernetes.io/proxy-set-headers: "Sec-WebSocket-Extensions $http_sec_websocket_extensions"
+    nginx.ingress.kubernetes.io/proxy-set-headers: "Sec-WebSocket-Key $http_sec_websocket_key"
+    nginx.ingress.kubernetes.io/proxy-set-headers: "Sec-WebSocket-Version $http_sec_websocket_version"
+    
+    # Buffer Configuration for better performance
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    
+    # Rate Limiting (optional - adjust based on your needs)
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    
+    # Security Headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - chatwoot.yourdomain.com
+    secretName: chatwoot-tls
+  rules:
+  - host: chatwoot.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: chatwoot-web
+            port:
+              number: 3000 

@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chatwoot-db-init
+  namespace: chatwoot
+spec:
+  template:
+    spec:
+      containers:
+      - name: db-init
+        image: your-registry/chatwoot:latest
+        envFrom:
+        - configMapRef:
+            name: chatwoot-config
+        - secretRef:
+            name: chatwoot-secrets
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: chatwoot-secrets
+              key: REDIS_PASSWORD
+        command: ["docker/entrypoints/rails.sh"]
+        args:
+        - "bundle"
+        - "exec"
+        - "rails"
+        - "db:create"
+        - "db:migrate"
+        - "db:seed"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      restartPolicy: Never
+  backoffLimit: 3 
