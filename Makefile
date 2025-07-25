@@ -1,6 +1,6 @@
 # Variables
 APP_NAME := chatwoot
-RAILS_ENV ?= development
+RAILS_ENV ?= production
 
 # Targets
 setup:
@@ -56,7 +56,7 @@ run_production:
 	@if [ -f ./.overmind.sock ]; then \
 		echo "Overmind is already running. Use 'make force_run_production' to start a new instance."; \
 	else \
-		RAILS_ENV=production NODE_ENV=production bundle exec rails assets:precompile; \
+		NODE_OPTIONS="--max-old-space-size=4096" RAILS_ENV=production NODE_ENV=production bundle exec rails assets:precompile; \
 		RAILS_ENV=production PORT=3000 NODE_ENV=production overmind start -f Procfile.prod; \
 	fi
 
@@ -68,7 +68,7 @@ force_run:
 force_run_production:
 	rm -f ./.overmind.sock
 	rm -f tmp/pids/*.pid
-	RAILS_ENV=production NODE_ENV=production bundle exec rails assets:precompile
+	NODE_OPTIONS="--max-old-space-size=4096" RAILS_ENV=production NODE_ENV=production bundle exec rails assets:precompile
 	RAILS_ENV=production PORT=3000 NODE_ENV=production overmind start -f Procfile.prod
 
 force_run_tunnel:
