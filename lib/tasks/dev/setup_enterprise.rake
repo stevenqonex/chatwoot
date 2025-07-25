@@ -62,33 +62,19 @@ namespace :chatwoot do
       if is_production
         puts "🚨 PRODUCTION ENVIRONMENT DETECTED 🚨"
         puts "=" * 50
-        puts "⚠️  This will enable enterprise features in production"      
-        print "Do you understand the risks and want to proceed? (type 'YES' to continue): "
-        confirmation = $stdin.gets.chomp
-        
-        unless confirmation == 'YES'
-          puts "❌ Operation cancelled. No changes made."
-          exit 0
-        end
-        
+        puts "⚠️  Enabling enterprise features in production..."
         puts "\n🚀 Enabling enterprise features for production..."
       else
         puts "🚀 Enabling enterprise features for development..."
         puts "💡 To run in production mode, use: RAILS_ENV=production rails chatwoot:dev:enable_enterprise"
       end
       
-      # Verify hub sync is disabled BEFORE making changes
+      # Show warning about hub sync but continue anyway
       unless hub_sync_disabled?
         puts "⚠️  WARNING: Chatwoot Hub sync is still enabled!"
         puts "   This means the daily sync job could override your enterprise settings."
         puts "   Add DISABLE_TELEMETRY=true to your .env file to prevent this."
-        puts ""
-        print "Continue anyway? (y/N): "
-        continue = $stdin.gets.chomp.downcase
-        unless continue == 'y' || continue == 'yes'
-          puts "❌ Operation cancelled. Please set DISABLE_TELEMETRY=true first."
-          exit 0
-        end
+        puts "   Continuing with enterprise setup..."
       end
       
       # Set premium plan

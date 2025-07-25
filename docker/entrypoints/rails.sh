@@ -30,5 +30,13 @@ do
   sleep 2;
 done
 
+# Prepare database (create if not exists, run migrations if needed)
+echo "Preparing database..."
+POSTGRES_STATEMENT_TIMEOUT=600s bundle exec rails db:chatwoot_prepare
+
+# Setup enterprise features
+echo "Setting up enterprise features..."
+bundle exec rails chatwoot:dev:enable_enterprise
+
 # Execute the main process of the container
 exec "$@"
