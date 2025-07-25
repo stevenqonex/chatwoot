@@ -31,12 +31,14 @@
 #    - Requires explicit confirmation for production environments
 #    - Clears potentially conflicting Stripe billing data
 #    - Disables version checks that could show update notifications
+#    - Clears premium configuration warnings that appear in super admin settings
 # 
 # Usage:
 #   rails chatwoot:dev:enable_enterprise     # Enable all enterprise features
 #   rails chatwoot:dev:disable_enterprise    # Disable enterprise features  
 #   rails chatwoot:dev:show_enterprise_status # Check current status
 #   rails chatwoot:dev:list_premium_features  # List available features
+#   rails chatwoot:dev:fix_premium_alert      # Quick fix for unauthorized premium changes alert
 # 
 # Prerequisites for Permanent Activation:
 #   1. Add DISABLE_TELEMETRY=true to your .env file
@@ -97,6 +99,9 @@ namespace :chatwoot do
       # Clear Stripe billing data to prevent conflicts
       clear_stripe_billing_data
       
+      # Clear premium configuration warning
+      clear_premium_config_warning
+      
       # Enable all premium features for existing accounts
       account_count = Account.count
       if account_count > 0
@@ -150,6 +155,9 @@ namespace :chatwoot do
       # Re-enable version checks
       enable_version_checks
       
+      # Clear premium configuration warning
+      clear_premium_config_warning
+      
       # Get premium features to disable
       premium_features = get_premium_features_list
       
@@ -202,6 +210,20 @@ namespace :chatwoot do
       puts "✅ Stripe billing data cleared"
     end
 
+    desc 'Clear premium configuration warning from super admin settings'
+    task clear_premium_warning: :environment do
+      clear_premium_config_warning
+      puts "✅ Premium configuration warning cleared from super admin settings"
+      puts "💡 The alert in super admin settings should now be gone"
+    end
+
+    desc 'Quick fix: Clear the unauthorized premium changes alert'
+    task fix_premium_alert: :environment do
+      clear_premium_config_warning
+      puts "✅ Unauthorized premium changes alert cleared!"
+      puts "💡 Refresh the super admin settings page to see the change"
+    end
+
     desc 'Show current enterprise configuration status'
     task show_enterprise_status: :environment do
       puts "📊 Enterprise Configuration Status"
@@ -215,6 +237,7 @@ namespace :chatwoot do
       puts "\n🔧 Development Mode Status:"
       puts "   Hub Sync: #{hub_sync_disabled? ? '❌ Disabled' : '✅ Enabled'}"
       puts "   Version Checks: #{Redis::Alfred.get(Redis::Alfred::LATEST_CHATWOOT_VERSION).present? ? '✅ Enabled' : '❌ Disabled'}"
+      puts "   Premium Config Warning: #{Redis::Alfred.get(Redis::Alfred::CHATWOOT_INSTALLATION_CONFIG_RESET_WARNING).present? ? '⚠️  Active' : '✅ Cleared'}"
       
       if ChatwootApp.enterprise?
         puts "\n🎯 Account Features Summary:"
@@ -390,6 +413,7 @@ namespace :chatwoot do
       puts "✅ Hub sync disabled (prevents license conflicts)"
       puts "✅ Version checks disabled (prevents update notifications)"
       puts "✅ Stripe billing data cleared (prevents billing conflicts)"
+      puts "✅ Premium configuration warning cleared (prevents super admin alerts)"
       puts "✅ External services still work with your API keys"
     end
 
@@ -456,6 +480,7 @@ namespace :chatwoot do
         puts "   - Chatwoot Hub sync: #{hub_sync_disabled? ? '✅ Disabled' : '⚠️  Still enabled (add DISABLE_TELEMETRY=true to .env)'}"
         puts "   - Version checks: ✅ Disabled"
         puts "   - Stripe billing data: ✅ Cleared"
+        puts "   - Premium config warning: ✅ Cleared"
         puts "   - External services still work with your API keys"
       else
         puts "\n✅ Enterprise features enabled successfully!"
@@ -472,6 +497,7 @@ namespace :chatwoot do
         puts "   - Chatwoot Hub sync: #{hub_sync_disabled? ? '✅ Disabled' : '⚠️  Still enabled (add DISABLE_TELEMETRY=true to .env)'}"
         puts "   - Version checks: ✅ Disabled"
         puts "   - Stripe billing data: ✅ Cleared"
+        puts "   - Premium config warning: ✅ Cleared"
         puts "   - External services still work with your API keys"
       end
       
@@ -538,6 +564,12 @@ namespace :chatwoot do
       # Note: Version checks will be re-enabled when the scheduled job runs
       # or when manually triggered via the admin interface
       puts "✅ Version checks will be re-enabled on next scheduled run"
+    end
+
+    def clear_premium_config_warning
+      # Clear the premium configuration reset warning that appears in super admin settings
+      Redis::Alfred.delete(Redis::Alfred::CHATWOOT_INSTALLATION_CONFIG_RESET_WARNING)
+      puts "✅ Cleared premium configuration warning"
     end
   end
 end 

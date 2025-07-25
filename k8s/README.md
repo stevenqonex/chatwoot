@@ -364,28 +364,25 @@ SMTP_PASSWORD: <base64-encoded-smtp-password>
 
 ### Step 5: Configure Ingress
 
-#### Web Application Ingress
+#### Web Application Ingress (Minimal)
 ```yaml
 ingress:
   enabled: true
   annotations:
+    # Essential: Force HTTPS
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # Essential: File upload support (Chatwoot handles attachments)
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    
+    # Essential: WebSocket support for ActionCable (real-time messaging)
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
-    nginx.ingress.kubernetes.io/proxy-set-headers: "Connection $http_connection"
-    nginx.ingress.kubernetes.io/proxy-set-headers: "Upgrade $http_upgrade"
-    nginx.ingress.kubernetes.io/proxy-set-headers: "Sec-WebSocket-Extensions $http_sec_websocket_extensions"
-    nginx.ingress.kubernetes.io/proxy-set-headers: "Sec-WebSocket-Key $http_sec_websocket_key"
-    nginx.ingress.kubernetes.io/proxy-set-headers: "Sec-WebSocket-Version $http_sec_websocket_version"
-    nginx.ingress.kubernetes.io/proxy-buffering: "off"
-    nginx.ingress.kubernetes.io/rate-limit: "100"
-    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Connection $http_connection;
+      proxy_set_header Upgrade $http_upgrade;
   hosts:
     - host: chatwoot.yourdomain.com
-      pathType: ImplementationSpecific
+      pathType: Prefix
       paths:
         - /
   tls:
@@ -394,6 +391,28 @@ ingress:
 
 #### Worker Application
 - **No Ingress needed** (worker doesn't serve HTTP)
+
+#### Optional Ingress Enhancements
+
+The minimal configuration above includes only what's essential. You can add these if needed:
+
+```yaml
+# Optional: Extended timeouts for long requests
+nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+
+# Optional: Rate limiting
+nginx.ingress.kubernetes.io/rate-limit: "300"
+nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+
+# Optional: Security headers (if not handled by application)
+nginx.ingress.kubernetes.io/configuration-snippet: |
+  add_header X-Frame-Options "SAMEORIGIN" always;
+  add_header X-Content-Type-Options "nosniff" always;
+
+# Optional: CORS (if not handled by Rails application)
+nginx.ingress.kubernetes.io/enable-cors: "true"
+```
 
 ### Step 6: Deploy Infrastructure First
 
