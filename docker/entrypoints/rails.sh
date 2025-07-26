@@ -36,7 +36,7 @@ POSTGRES_STATEMENT_TIMEOUT=600s bundle exec rails db:chatwoot_prepare
 
 # Setup enterprise features
 echo "Setting up enterprise features..."
-bundle exec rails chatwoot:dev:enable_enterprise
+bundle exec rails chatwoot:dev:setup_enterprise_safe
 
 # Execute the main process of the container
 exec "$@"

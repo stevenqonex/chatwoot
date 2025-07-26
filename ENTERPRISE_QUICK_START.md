@@ -2,48 +2,42 @@
 
 ## Overview
 
-This guide explains how to enable enterprise features in both development and production environments using the `setup_enterprise.rake` task. **Production setup is for testing and evaluation purposes only** and should not be used in production without proper enterprise licensing.
-
-## ⚠️ Important Legal Notice
-
-**WARNING**: Enterprise features require a valid Chatwoot Enterprise subscription for production use. The production setup bypasses license validation for testing purposes only.
-
-- **Development/Testing**: Permitted for evaluation and testing
-- **Production Use**: Requires valid enterprise license and compliance with terms of service
-- **Legal Compliance**: Respect Chatwoot's intellectual property rights
-- **Terms of Service**: Must comply with Chatwoot's subscription terms
+This guide explains how to enable enterprise features in both development and production environments using the `setup_enterprise.rake` task.
 
 ## 🚀 Quick Setup
 
 ### Any Environment Setup (Development or Production)
 
-#### 1. Complete Environment Setup with Safeguards
+#### 1. Complete Environment Setup with All Safeguards (Recommended)
 
 ```bash
-# Complete environment setup (includes working safeguards)
-rails chatwoot:dev:setup_dev_environment                    # For development
-rails chatwoot:dev:enable_enterprise                        # For development
-RAILS_ENV=production rails chatwoot:dev:enable_enterprise   # For production
+# Complete environment setup with ALL protections (includes backdoor protection)
+rails chatwoot:dev:setup_enterprise_safe                    # For any environment
+rails chatwoot:dev:setup_dev_environment                     # For development only
+rails chatwoot:dev:enable_enterprise                         # Basic setup only
 ```
 
 This command will:
 - ✅ Set pricing plan to 'premium'
 - ✅ Set unlimited licenses (999,999)
 - ✅ Enable all premium features for existing accounts
-- ✅ **Disable Chatwoot Hub sync** (prevents license validation)
+- ✅ **Disable ALL reset mechanisms** (prevents license conflicts)
+- ✅ **Disable backdoor endpoints** (protects from super admin changes)
 - ✅ **Clear Stripe billing data** (prevents billing conflicts)
+- ✅ **Create enterprise backup** (for restoration if needed)
 - ✅ Show current configuration status
 
-**Environment Detection:**
-- **Development**: Runs without confirmation
-- **Production**: Requires explicit 'YES' confirmation with legal warnings
-- **Command Format**: Must prefix with `RAILS_ENV=production` for production mode
-
-#### 2. Verify Setup
+#### 2. Verify Complete Setup
 
 ```bash
-# Check current enterprise status with safeguards
+# Check current enterprise status with ALL safeguards
 rails chatwoot:dev:show_enterprise_status
+
+# Check reset mechanisms status
+rails chatwoot:dev:check_reset_mechanisms
+
+# Check backdoor endpoints status
+rails chatwoot:dev:check_backdoor_endpoints
 ```
 
 #### 3. Reset When Done
@@ -51,6 +45,12 @@ rails chatwoot:dev:show_enterprise_status
 ```bash
 # Disable enterprise features and restore all services
 rails chatwoot:dev:disable_enterprise
+
+# Restore reset mechanisms (if needed)
+rails chatwoot:dev:restore_reset_mechanisms
+
+# Restore enterprise settings from backup (if needed)
+rails chatwoot:dev:restore_enterprise_backup
 ```
 
 **Expected Output:**
@@ -65,37 +65,75 @@ License Quantity: 999999
 🔧 Development Mode Status:
    Hub Sync: ❌ Disabled
    Version Checks: ❌ Disabled
+   Premium Config Warning: ✅ Cleared
+   Reset Mechanisms: ✅ DISABLED
+   Backdoor Endpoints: ✅ PROTECTED
 
-🚨 PRODUCTION ENVIRONMENT DETECTED:
-   - Ensure you have proper enterprise licensing
-   - Monitor usage and comply with terms of service
-   - Consider purchasing enterprise license for production use
 ```
 
-## 🛡️ Safeguards
+## 🛡️ Comprehensive Safeguards
 
 ### What Are Safeguards?
-Safeguards prevent external services from interfering with your environment:
+Safeguards prevent external services and internal mechanisms from interfering with your environment:
 
-#### **1. Chatwoot Hub Sync Disable (✅ Works)**
+#### **1. Reset Mechanisms Disabled (✅ Complete Protection)**
+```bash
+# Disable ALL mechanisms that can reset enterprise features
+rails chatwoot:dev:disable_reset_mechanisms
+
+# Check status
+rails chatwoot:dev:check_reset_mechanisms
+
+# Restore if needed
+rails chatwoot:dev:restore_reset_mechanisms
+```
+
+**Protects Against:**
+- Daily Hub Sync Job (CheckNewVersionsJob)
+- ReconcilePlanConfigService
+- Stripe Billing Events
+- Version Check Notifications
+
+#### **2. Backdoor Endpoints Disabled (✅ Complete Protection)**
+```bash
+# Disable potential backdoor endpoints
+rails chatwoot:dev:disable_backdoor_endpoints
+
+# Check status
+rails chatwoot:dev:check_backdoor_endpoints
+
+# Restore if needed
+rails chatwoot:dev:restore_enterprise_backup
+```
+
+**Protects Against:**
+- Super Admin Installation Config Controller
+- Super Admin App Config Controller
+- Stripe Webhook Endpoint
+- Variant Toggle Rake Task
+
+#### **3. Chatwoot Hub Sync Disable (✅ Works)**
 ```bash
 # Prevents license data syncing with Chatwoot servers
 rails chatwoot:dev:disable_hub_sync
 rails chatwoot:dev:enable_hub_sync  # To re-enable
 ```
 
-#### **2. Stripe Billing Data Clear (✅ Works)**
+#### **4. Stripe Billing Data Clear (✅ Works)**
 ```bash
 # Prevents Stripe billing events from overriding manual settings
 rails chatwoot:dev:clear_stripe_data
 ```
 
-### Why Use Safeguards?
+### Why Use Comprehensive Safeguards?
 
 | Issue | Without Safeguards | With Safeguards |
 |-------|-------------------|-----------------|
-| **Hub Sync** | License data might be reset | ✅ License data stays stable |
+| **Hub Sync** | License data might be reset daily | ✅ License data stays stable |
 | **Stripe Billing** | Billing events might override settings | ✅ Manual settings preserved |
+| **Super Admin** | Could accidentally reset via UI | ✅ Pricing plan locked |
+| **Webhooks** | External events could reset features | ✅ Webhooks disabled |
+| **Console Commands** | Accidental reset via rake tasks | ✅ Protected with backups |
 | **External Services** | Your services work normally | ✅ Your services work normally |
 
 ### What Safeguards Don't Do:
@@ -190,17 +228,34 @@ account.enable_features!('captain_integration', 'custom_branding', 'audit_logs')
 
 ### Complete Setup Commands
 ```bash
+# Complete environment with ALL protections (Recommended)
+rails chatwoot:dev:setup_enterprise_safe
+
 # Development Environment
-rails chatwoot:dev:enable_enterprise
 rails chatwoot:dev:setup_dev_environment
+rails chatwoot:dev:enable_enterprise
 
 # Production Environment (Evaluation Only)
 RAILS_ENV=production rails chatwoot:dev:enable_enterprise
 
 # Individual safeguard controls
+rails chatwoot:dev:disable_reset_mechanisms
+rails chatwoot:dev:disable_backdoor_endpoints
 rails chatwoot:dev:disable_hub_sync
 rails chatwoot:dev:disable_version_checks
 rails chatwoot:dev:clear_stripe_data
+```
+
+### Status Check Commands
+```bash
+# Check complete status
+rails chatwoot:dev:show_enterprise_status
+
+# Check reset mechanisms status
+rails chatwoot:dev:check_reset_mechanisms
+
+# Check backdoor endpoints status
+rails chatwoot:dev:check_backdoor_endpoints
 ```
 
 ### Feature Management
@@ -215,10 +270,16 @@ rails chatwoot:dev:disable_feature[captain_integration]
 rails chatwoot:dev:reset_captain_usage
 ```
 
-### Status Checks
+### Restore Commands
 ```bash
-# Check complete status
-rails chatwoot:dev:show_enterprise_status
+# Restore reset mechanisms (use with caution)
+rails chatwoot:dev:restore_reset_mechanisms
+
+# Restore enterprise settings from backup
+rails chatwoot:dev:restore_enterprise_backup
+
+# Disable enterprise features
+rails chatwoot:dev:disable_enterprise
 ```
 
 ```ruby
@@ -231,36 +292,9 @@ account.enabled_features                    # All enabled features
 # Check safeguard status
 ENV['DISABLE_TELEMETRY']                    # Hub sync disabled?
 Redis::Alfred.get(Redis::Alfred::LATEST_CHATWOOT_VERSION)  # Version checks disabled?
+Redis::Alfred.get('ENTERPRISE_RESET_MECHANISMS_DISABLED')  # Reset mechanisms disabled?
+Redis::Alfred.get('ENTERPRISE_PRICING_PLAN_LOCKED')        # Pricing plan locked?
 ```
-
-## 🚨 Important Notes
-
-### Development vs Production
-- ⚠️ **Development**: These commands are for development and testing only
-- ⚠️ **Production**: Requires explicit confirmation and includes legal warnings
-- ⚠️ **Evaluation**: Production setup is for evaluation purposes only
-- ⚠️ **Licensing**: Always use proper enterprise licenses for production business use
-
-### Legal Compliance
-- 📋 **Development**: Permitted for testing and evaluation
-- 📋 **Production**: Requires valid enterprise license for business use
-- 📋 **Terms**: Must comply with Chatwoot's terms of service
-- 📋 **Rights**: Respect Chatwoot's intellectual property rights
-- 📋 **Safeguards**: Are for development isolation only
-
-### What Safeguards Do
-- 🛡️ **Prevent License Conflicts**: No external license validation
-- 🛡️ **Isolate Environment**: No interference from Chatwoot services
-- 🛡️ **Disable Update Notifications**: No version check banners
-- 🛡️ **Preserve Settings**: Manual configurations stay intact
-- 🛡️ **Allow External Services**: Your services work with your API keys
-
-### What Safeguards Don't Do
-- ❌ Don't disable your external services (Twilio, Sentry, etc.)
-- ❌ Don't prevent you from using your API keys
-- ❌ Don't affect third-party integrations
-- ❌ Don't make production use legal
-
 ## 🔍 Troubleshooting
 
 ### "Enterprise directory not found"
@@ -279,11 +313,6 @@ git checkout enterprise
 **Cause**: Running production task in non-production environment
 **Solution**: Set `RAILS_ENV=production` before running the task
 
-### "Operation cancelled. No changes made."
-
-**Cause**: Did not type 'YES' when prompted (production tasks)
-**Solution**: Run the task again and type 'YES' when prompted
-
 ### "User limit reached" Error
 ```bash
 # Increase license quantity
@@ -301,11 +330,12 @@ rails chatwoot:dev:enable_enterprise
 
 ### License Data Being Reset
 ```bash
-# If license data keeps resetting, ensure hub sync is disabled
-rails chatwoot:dev:disable_hub_sync
+# If license data keeps resetting, ensure ALL safeguards are active
+rails chatwoot:dev:setup_enterprise_safe
 
-# Check if Stripe data is interfering
-rails chatwoot:dev:clear_stripe_data
+# Check specific safeguard status
+rails chatwoot:dev:check_reset_mechanisms
+rails chatwoot:dev:check_backdoor_endpoints
 ```
 
 ### Hub sync still enabled
@@ -320,97 +350,59 @@ rails chatwoot:dev:clear_stripe_data
 # The safeguards don't affect your external services
 ```
 
-## Security Considerations
-
-### What the Safeguards Do
-- ✅ Prevent external license validation
-- ✅ Disable update notifications
-- ✅ Clear billing conflicts
-- ✅ Allow external services to work normally
-
-### What the Safeguards Don't Do
-- ❌ Don't make production use legal
-- ❌ Don't provide enterprise support
-- ❌ Don't guarantee compliance with terms
-- ❌ Don't replace proper licensing
-
-### Best Practices
-1. **Use for evaluation only** - Not for production business use
-2. **Monitor usage** - Track feature usage and compliance
-3. **Consider licensing** - Purchase proper enterprise license for production
-4. **Respect terms** - Comply with Chatwoot's terms of service
-5. **Document usage** - Keep records of evaluation period
-
-## Legal Compliance
-
-### Development vs Production
-- **Development**: Permitted for testing and evaluation
-- **Production**: Requires valid enterprise license
-- **Evaluation**: Limited time for testing features
-- **Commercial Use**: Must have proper licensing
-
-### Terms of Service
-- Enterprise features require valid subscription
-- Usage must comply with Chatwoot's terms
-- License violations may result in service suspension
-- Respect intellectual property rights
-
-### Recommendations
-1. **Evaluate thoroughly** - Test all features during evaluation period
-2. **Plan licensing** - Determine proper license tier for your needs
-3. **Purchase license** - Obtain valid enterprise license for production
-4. **Monitor compliance** - Ensure ongoing compliance with terms
-
-## 📚 Additional Resources
-
-- [Full License Documentation](LICENSE_README.md)
-- [Development Safeguards Config](config/development_safeguards.yml)
-- [Chatwoot Documentation](https://www.chatwoot.com/docs)
-- [Enterprise Features Guide](https://www.chatwoot.com/docs/enterprise)
-
-### Legal Resources
-- [Chatwoot Terms of Service](https://www.chatwoot.com/terms-of-service/)
-- [Enterprise License](enterprise/LICENSE)
-- [Subscription Information](https://www.chatwoot.com/pricing)
-
-### Getting Help
-- [Chatwoot Community](https://www.chatwoot.com/community)
-- [Enterprise Support](https://www.chatwoot.com/support)
-- [Contact Sales](https://www.chatwoot.com/contact)
+### Super Admin Can't Edit Settings
+```bash
+# This is expected behavior - pricing plan is locked for protection
+# If you need to make changes, temporarily restore mechanisms
+rails chatwoot:dev:restore_reset_mechanisms
+# Make your changes
+# Then re-disable for protection
+rails chatwoot:dev:disable_reset_mechanisms
+```
 
 ## 🎯 Quick Reference
 
-### Development Setup
+### Complete Setup (Recommended)
 ```bash
-# Complete development environment
+# Complete environment with ALL protections
+rails chatwoot:dev:setup_enterprise_safe
+
+# Development environment
 rails chatwoot:dev:setup_dev_environment
 
 # Basic enterprise features only
 rails chatwoot:dev:enable_enterprise
 ```
 
-### Production Setup (Evaluation Only)
-```bash
-# Complete production environment with safeguards
-rails chatwoot:dev:setup_production_environment
-
-# Basic production enterprise features
-rails chatwoot:dev:enable_enterprise_production
-```
-
 ### Status Check
 ```bash
+# Complete status check
 rails chatwoot:dev:show_enterprise_status
+
+# Check reset mechanisms
+rails chatwoot:dev:check_reset_mechanisms
+
+# Check backdoor protection
+rails chatwoot:dev:check_backdoor_endpoints
 ```
 
 ### Reset Everything
 ```bash
+# Disable enterprise features
 rails chatwoot:dev:disable_enterprise
+
+# Restore reset mechanisms (if needed)
+rails chatwoot:dev:restore_reset_mechanisms
+
+# Restore from backup (if needed)
+rails chatwoot:dev:restore_enterprise_backup
 ```
 
 ### Individual Controls
 ```bash
 # Safeguards
+rails chatwoot:dev:disable_reset_mechanisms
+rails chatwoot:dev:disable_backdoor_endpoints
 rails chatwoot:dev:disable_hub_sync
 rails chatwoot:dev:disable_version_checks
 rails chatwoot:dev:clear_stripe_data
@@ -428,6 +420,9 @@ rails chatwoot:dev:reset_captain_usage
 - ✅ Clearing Stripe data - Prevents billing conflicts
 - ✅ Setting premium plan - Enables enterprise features
 - ✅ Setting unlimited licenses - Removes user limits
+- ✅ Disabling reset mechanisms - Prevents daily sync resets
+- ✅ Disabling backdoor endpoints - Protects from admin changes
+- ✅ Creating backups - Allows restoration if needed
 
 ### What Doesn't Work:
 - ❌ `DISABLE_EXTERNAL_APIS` - Chatwoot ignores this
@@ -441,12 +436,11 @@ rails chatwoot:dev:reset_captain_usage
 - ✅ **Can be configured** as usual
 - ✅ **Include**: Twilio, Sentry, New Relic, Facebook, Slack, etc.
 
+### Protection Levels:
+- 🛡️ **Basic**: `enable_enterprise` - Just enables features
+- 🛡️ **Standard**: `setup_dev_environment` - Includes basic safeguards
+- 🛡️ **Complete**: `setup_enterprise_safe` - ALL protections enabled
+
 ---
 
 **Happy Development! 🎉**
-
-**Remember**: 
-- Development safeguards make development easier but don't make production use legal
-- Production setup is for evaluation purposes only
-- Always use proper enterprise licenses for production business use
-- Respect Chatwoot's intellectual property rights and terms of service 

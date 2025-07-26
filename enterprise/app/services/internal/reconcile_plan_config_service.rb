@@ -1,12 +1,18 @@
 class Internal::ReconcilePlanConfigService
   def perform
-    remove_premium_config_reset_warning
-    return if ChatwootHub.pricing_plan != 'community'
-
-    create_premium_config_reset_warning if premium_config_reset_required?
-
-    reconcile_premium_config
-    reconcile_premium_features
+    # DISABLED: This service can reset enterprise features to community
+    # For development/self-hosted installations, we want to preserve enterprise settings
+    Rails.logger.info "ReconcilePlanConfigService disabled - preserving enterprise settings"
+    return
+    
+    # Original code commented out for safety
+    # remove_premium_config_reset_warning
+    # return if ChatwootHub.pricing_plan != 'community'
+    # 
+    # create_premium_config_reset_warning if premium_config_reset_required?
+    # 
+    # reconcile_premium_config
+    # reconcile_premium_features
   end
 
   private

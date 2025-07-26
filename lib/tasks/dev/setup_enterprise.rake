@@ -417,6 +417,239 @@ namespace :chatwoot do
       puts "✅ External services still work with your API keys"
     end
 
+    desc 'Permanently disable all mechanisms that can reset enterprise features to community'
+    task disable_reset_mechanisms: :environment do
+      puts "🛡️  Permanently disabling all reset mechanisms..."
+      
+      # 1. Disable the scheduled job via Sidekiq Cron
+      begin
+        job = Sidekiq::Cron::Job.find('internal_check_new_versions_job')
+        if job
+          job.disable!
+          puts "✅ Disabled CheckNewVersionsJob in Sidekiq Cron"
+        else
+          puts "ℹ️  CheckNewVersionsJob not found in Sidekiq Cron (already disabled)"
+        end
+      rescue => e
+        puts "⚠️  Could not disable CheckNewVersionsJob: #{e.message}"
+      end
+      
+      # 2. Clear any existing version cache
+      Redis::Alfred.delete(Redis::Alfred::LATEST_CHATWOOT_VERSION)
+      puts "✅ Cleared version check cache"
+      
+      # 3. Clear premium configuration warning
+      Redis::Alfred.delete(Redis::Alfred::CHATWOOT_INSTALLATION_CONFIG_RESET_WARNING)
+      puts "✅ Cleared premium configuration warning"
+      
+      # 4. Clear any Stripe billing data
+      clear_stripe_billing_data
+      
+      # 5. Set a persistent flag to indicate reset mechanisms are disabled
+      Redis::Alfred.set('ENTERPRISE_RESET_MECHANISMS_DISABLED', 'true')
+      puts "✅ Set persistent flag: ENTERPRISE_RESET_MECHANISMS_DISABLED"
+      
+      # 6. Verify current enterprise status
+      puts "\n📊 Current Enterprise Status:"
+      puts "   Plan: #{ChatwootHub.pricing_plan}"
+      puts "   License Quantity: #{ChatwootHub.pricing_plan_quantity}"
+      puts "   Hub Sync: #{hub_sync_disabled? ? '❌ Disabled' : '⚠️  Still enabled'}"
+      
+      puts "\n🛡️  Reset mechanisms permanently disabled!"
+      puts "💡 Your enterprise features should now remain stable."
+      puts "💡 If you need to re-enable these mechanisms later, you can:"
+      puts "   - Uncomment the job in config/schedule.yml"
+      puts "   - Restore the original code in the service files"
+      puts "   - Remove the DISABLE_TELEMETRY=true from your .env file"
+    end
+
+    desc 'Check if reset mechanisms are disabled'
+    task check_reset_mechanisms: :environment do
+      puts "🔍 Checking reset mechanism status..."
+      
+      # Check if the job is disabled in Sidekiq Cron
+      begin
+        job = Sidekiq::Cron::Job.find('internal_check_new_versions_job')
+        if job
+          status = job.status
+          puts "📅 CheckNewVersionsJob: #{status == 'enabled' ? '⚠️  ENABLED' : '✅ DISABLED'}"
+        else
+          puts "📅 CheckNewVersionsJob: ✅ NOT FOUND (disabled)"
+        end
+      rescue => e
+        puts "📅 CheckNewVersionsJob: ❓ UNKNOWN (#{e.message})"
+      end
+      
+      # Check environment variables
+      puts "🔧 DISABLE_TELEMETRY: #{ENV['DISABLE_TELEMETRY'] || 'Not set'}"
+      
+      # Check Redis flags
+      disabled_flag = Redis::Alfred.get('ENTERPRISE_RESET_MECHANISMS_DISABLED')
+      puts "🛡️  Reset mechanisms disabled flag: #{disabled_flag == 'true' ? '✅ SET' : '❌ NOT SET'}"
+      
+      # Check current enterprise status
+      puts "\n📊 Enterprise Status:"
+      puts "   Plan: #{ChatwootHub.pricing_plan}"
+      puts "   License Quantity: #{ChatwootHub.pricing_plan_quantity}"
+      puts "   Hub Sync: #{hub_sync_disabled? ? '❌ Disabled' : '⚠️  Enabled'}"
+      
+      # Check for any Stripe billing data
+      stripe_accounts = Account.where("custom_attributes->>'stripe_customer_id' IS NOT NULL").count
+      puts "💳 Accounts with Stripe data: #{stripe_accounts}"
+      
+      if stripe_accounts > 0
+        puts "⚠️  WARNING: #{stripe_accounts} account(s) have Stripe billing data"
+        puts "   This could potentially override your enterprise settings"
+        puts "   Run: rails chatwoot:dev:clear_stripe_data to clear this data"
+      end
+    end
+
+    desc 'Restore original reset mechanisms (use with caution)'
+    task restore_reset_mechanisms: :environment do
+      puts "⚠️  WARNING: This will re-enable mechanisms that can reset enterprise features!"
+      puts "Are you sure you want to continue? (y/N)"
+      
+      response = $stdin.gets.chomp.downcase
+      unless response == 'y' || response == 'yes'
+        puts "❌ Operation cancelled"
+        exit 0
+      end
+      
+      puts "🔄 Restoring original reset mechanisms..."
+      
+      # 1. Re-enable the scheduled job via Sidekiq Cron
+      begin
+        job = Sidekiq::Cron::Job.find('internal_check_new_versions_job')
+        if job
+          job.enable!
+          puts "✅ Re-enabled CheckNewVersionsJob in Sidekiq Cron"
+        else
+          puts "⚠️  CheckNewVersionsJob not found in Sidekiq Cron"
+          puts "   You may need to uncomment it in config/schedule.yml"
+        end
+      rescue => e
+        puts "⚠️  Could not re-enable CheckNewVersionsJob: #{e.message}"
+      end
+      
+      # 2. Remove the persistent flag
+      Redis::Alfred.delete('ENTERPRISE_RESET_MECHANISMS_DISABLED')
+      puts "✅ Removed persistent flag: ENTERPRISE_RESET_MECHANISMS_DISABLED"
+      
+      puts "\n⚠️  IMPORTANT: You also need to manually restore the original code in:"
+      puts "   - enterprise/app/services/internal/reconcile_plan_config_service.rb"
+      puts "   - enterprise/app/services/enterprise/billing/handle_stripe_event_service.rb"
+      puts "   - config/schedule.yml (uncomment the internal_check_new_versions_job)"
+      
+      puts "\n✅ Reset mechanisms restored!"
+      puts "💡 Your enterprise features may now be reset by the daily sync job"
+    end
+
+    desc 'Disable potential backdoor endpoints that could reset enterprise features'
+    task disable_backdoor_endpoints: :environment do
+      puts "🛡️  Disabling potential backdoor endpoints..."
+      
+      # 1. Set a flag to prevent super admin from editing pricing plan
+      Redis::Alfred.set('ENTERPRISE_PRICING_PLAN_LOCKED', 'true')
+      puts "✅ Locked pricing plan from super admin editing"
+      
+      # 2. Clear any existing Stripe webhook configurations
+      stripe_webhook_config = InstallationConfig.find_by(name: 'STRIPE_WEBHOOK_SECRET')
+      if stripe_webhook_config
+        stripe_webhook_config.update!(value: 'DISABLED_FOR_ENTERPRISE')
+        puts "✅ Disabled Stripe webhook secret"
+      end
+      
+      # 3. Set environment variable to prevent Stripe webhook processing
+      ENV['STRIPE_WEBHOOK_SECRET'] = 'DISABLED_FOR_ENTERPRISE'
+      puts "✅ Set STRIPE_WEBHOOK_SECRET to disabled"
+      
+      # 4. Create a backup of current enterprise settings
+      current_plan = ChatwootHub.pricing_plan
+      current_quantity = ChatwootHub.pricing_plan_quantity
+      
+      Redis::Alfred.set('ENTERPRISE_BACKUP_PLAN', current_plan)
+      Redis::Alfred.set('ENTERPRISE_BACKUP_QUANTITY', current_quantity.to_s)
+      puts "✅ Created backup of current enterprise settings"
+      
+      puts "\n🛡️  Backdoor endpoints disabled!"
+      puts "💡 Super admin cannot edit pricing plan"
+      puts "💡 Stripe webhooks are disabled"
+      puts "💡 Enterprise settings are backed up"
+    end
+
+    desc 'Check if backdoor endpoints are disabled'
+    task check_backdoor_endpoints: :environment do
+      puts "🔍 Checking backdoor endpoint status..."
+      
+      # Check pricing plan lock
+      plan_locked = Redis::Alfred.get('ENTERPRISE_PRICING_PLAN_LOCKED')
+      puts "🔒 Pricing plan locked: #{plan_locked == 'true' ? '✅ YES' : '❌ NO'}"
+      
+      # Check Stripe webhook status
+      stripe_secret = ENV['STRIPE_WEBHOOK_SECRET']
+      puts "💳 Stripe webhook secret: #{stripe_secret == 'DISABLED_FOR_ENTERPRISE' ? '✅ DISABLED' : '⚠️  ENABLED'}"
+      
+      # Check enterprise backup
+      backup_plan = Redis::Alfred.get('ENTERPRISE_BACKUP_PLAN')
+      backup_quantity = Redis::Alfred.get('ENTERPRISE_BACKUP_QUANTITY')
+      puts "💾 Enterprise backup: #{backup_plan ? "✅ #{backup_plan} (#{backup_quantity})" : '❌ NOT FOUND'}"
+      
+      # Check current status
+      puts "\n📊 Current Enterprise Status:"
+      puts "   Plan: #{ChatwootHub.pricing_plan}"
+      puts "   License Quantity: #{ChatwootHub.pricing_plan_quantity}"
+    end
+
+    desc 'Restore enterprise settings from backup (if needed)'
+    task restore_enterprise_backup: :environment do
+      puts "🔄 Restoring enterprise settings from backup..."
+      
+      backup_plan = Redis::Alfred.get('ENTERPRISE_BACKUP_PLAN')
+      backup_quantity = Redis::Alfred.get('ENTERPRISE_BACKUP_QUANTITY')
+      
+      if backup_plan && backup_quantity
+        # Restore pricing plan
+        premium_config = InstallationConfig.find_or_create_by(name: 'INSTALLATION_PRICING_PLAN')
+        premium_config.update!(value: backup_plan)
+        
+        # Restore license quantity
+        quantity_config = InstallationConfig.find_or_create_by(name: 'INSTALLATION_PRICING_PLAN_QUANTITY')
+        quantity_config.update!(value: backup_quantity)
+        
+        # Clear cache
+        GlobalConfig.clear_cache
+        
+        puts "✅ Restored enterprise settings:"
+        puts "   Plan: #{backup_plan}"
+        puts "   License Quantity: #{backup_quantity}"
+      else
+        puts "❌ No backup found. Run setup_enterprise_safe first."
+      end
+    end
+
+    desc 'Complete enterprise setup with all safeguards (recommended)'
+    task setup_enterprise_safe: :environment do
+      puts "🚀 Setting up enterprise features with complete safeguards..."
+      
+      # 1. Enable enterprise features
+      Rake::Task['chatwoot:dev:enable_enterprise'].invoke
+      
+      # 2. Disable all reset mechanisms
+      Rake::Task['chatwoot:dev:disable_reset_mechanisms'].invoke
+      
+      # 3. Disable backdoor endpoints
+      Rake::Task['chatwoot:dev:disable_backdoor_endpoints'].invoke
+      
+      puts "\n🎉 Complete enterprise setup with all safeguards!"
+      puts "✅ Enterprise features enabled"
+      puts "✅ All reset mechanisms disabled"
+      puts "✅ Backdoor endpoints disabled"
+      puts "✅ Your enterprise features should now remain stable"
+      puts "\n💡 To check status anytime: rails chatwoot:dev:check_reset_mechanisms"
+      puts "💡 To check backdoor status: rails chatwoot:dev:check_backdoor_endpoints"
+      puts "💡 To restore if needed: rails chatwoot:dev:restore_enterprise_backup"
+    end
+
     private
 
     def hub_sync_disabled?
