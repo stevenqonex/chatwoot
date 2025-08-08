@@ -21,6 +21,7 @@ const { t } = useI18n();
 const initialState = {
   handoffMessage: '',
   resolutionMessage: '',
+  instructions: '',
   temperature: 1,
 };
 
@@ -29,6 +30,7 @@ const state = reactive({ ...initialState });
 const validationRules = {
   handoffMessage: { minLength: minLength(1) },
   resolutionMessage: { minLength: minLength(1) },
+  instructions: { minLength: minLength(1) },
 };
 
 const v$ = useVuelidate(validationRules, state);
@@ -40,12 +42,14 @@ const getErrorMessage = field => {
 const formErrors = computed(() => ({
   handoffMessage: getErrorMessage('handoffMessage'),
   resolutionMessage: getErrorMessage('resolutionMessage'),
+  instructions: getErrorMessage('instructions'),
 }));
 
 const updateStateFromAssistant = assistant => {
   const { config = {} } = assistant;
   state.handoffMessage = config.handoff_message;
   state.resolutionMessage = config.resolution_message;
+  state.instructions = config.instructions;
   state.temperature = config.temperature || 1;
 };
 
@@ -68,6 +72,21 @@ const handleSystemMessagesUpdate = async () => {
   emit('submit', payload);
 };
 
+const handleInstructionsUpdate = async () => {
+  const result = await v$.value.instructions.$validate();
+  if (!result) return;
+
+  const payload = {
+    config: {
+      ...props.assistant.config,
+      instructions: state.instructions,
+      temperature: state.temperature || 1,
+    },
+  };
+
+  emit('submit', payload);
+};
+
 watch(
   () => props.assistant,
   newAssistant => {
@@ -79,47 +98,75 @@ watch(
 
 <template>
   <div class="flex flex-col gap-6">
-    <Editor
-      v-model="state.handoffMessage"
-      :label="t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.LABEL')"
-      :placeholder="t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.PLACEHOLDER')"
-      :message="formErrors.handoffMessage"
-      :message-type="formErrors.handoffMessage ? 'error' : 'info'"
-    />
-
-    <Editor
-      v-model="state.resolutionMessage"
-      :label="t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.LABEL')"
-      :placeholder="t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.PLACEHOLDER')"
-      :message="formErrors.resolutionMessage"
-      :message-type="formErrors.resolutionMessage ? 'error' : 'info'"
-    />
-
-    <div class="flex flex-col gap-2">
-      <label class="text-sm font-medium text-n-slate-12">
-        {{ t('CAPTAIN.ASSISTANTS.FORM.TEMPERATURE.LABEL') }}
-      </label>
-      <div class="flex items-center gap-4">
-        <input
-          v-model="state.temperature"
-          type="range"
-          min="0"
-          max="1"
-          step="0.1"
-          class="w-full"
+    <!-- Instructions Section -->
+    <div class="flex flex-col gap-4">
+      <h3 class="text-lg font-medium text-n-slate-12">
+        {{ t('CAPTAIN.ASSISTANTS.FORM.SECTIONS.INSTRUCTIONS') }}
+      </h3>
+      <Editor
+        v-model="state.instructions"
+        :placeholder="t('CAPTAIN.ASSISTANTS.FORM.INSTRUCTIONS.PLACEHOLDER')"
+        :message="formErrors.instructions"
+        :max-length="20000"
+        :message-type="formErrors.instructions ? 'error' : 'info'"
+      />
+      <div class="flex justify-end">
+        <Button
+          :label="t('CAPTAIN.ASSISTANTS.FORM.UPDATE')"
+          @click="handleInstructionsUpdate"
         />
-        <span class="text-sm text-n-slate-12">{{ state.temperature }}</span>
       </div>
-      <p class="text-sm text-n-slate-11 italic">
-        {{ t('CAPTAIN.ASSISTANTS.FORM.TEMPERATURE.DESCRIPTION') }}
-      </p>
     </div>
 
-    <div>
-      <Button
-        :label="t('CAPTAIN.ASSISTANTS.FORM.UPDATE')"
-        @click="handleSystemMessagesUpdate"
+    <!-- System Messages Section -->
+    <div class="flex flex-col gap-4">
+      <h3 class="text-lg font-medium text-n-slate-12">
+        {{ t('CAPTAIN.ASSISTANTS.FORM.SECTIONS.SYSTEM_MESSAGES') }}
+      </h3>
+      <Editor
+        v-model="state.handoffMessage"
+        :label="t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.LABEL')"
+        :placeholder="t('CAPTAIN.ASSISTANTS.FORM.HANDOFF_MESSAGE.PLACEHOLDER')"
+        :message="formErrors.handoffMessage"
+        :message-type="formErrors.handoffMessage ? 'error' : 'info'"
       />
+
+      <Editor
+        v-model="state.resolutionMessage"
+        :label="t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.LABEL')"
+        :placeholder="
+          t('CAPTAIN.ASSISTANTS.FORM.RESOLUTION_MESSAGE.PLACEHOLDER')
+        "
+        :message="formErrors.resolutionMessage"
+        :message-type="formErrors.resolutionMessage ? 'error' : 'info'"
+      />
+
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-medium text-n-slate-12">
+          {{ t('CAPTAIN.ASSISTANTS.FORM.TEMPERATURE.LABEL') }}
+        </label>
+        <div class="flex items-center gap-4">
+          <input
+            v-model="state.temperature"
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            class="w-full"
+          />
+          <span class="text-sm text-n-slate-12">{{ state.temperature }}</span>
+        </div>
+        <p class="text-sm text-n-slate-11 italic">
+          {{ t('CAPTAIN.ASSISTANTS.FORM.TEMPERATURE.DESCRIPTION') }}
+        </p>
+      </div>
+
+      <div>
+        <Button
+          :label="t('CAPTAIN.ASSISTANTS.FORM.UPDATE')"
+          @click="handleSystemMessagesUpdate"
+        />
+      </div>
     </div>
   </div>
 </template>
