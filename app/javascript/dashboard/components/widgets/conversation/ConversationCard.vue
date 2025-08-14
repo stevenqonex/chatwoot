@@ -96,6 +96,10 @@ const showInboxName = computed(() => {
   );
 });
 
+const isAIConversation = computed(() => {
+  return props.chat.status === 'pending' && !props.chat.meta?.assignee;
+});
+
 const showMetaSection = computed(() => {
   return (
     showInboxName.value ||
@@ -224,6 +228,9 @@ const deleteConversation = () => {
   emit('deleteConversation', props.chat.id);
   closeContextMenu();
 };
+
+// Add computed properties for the hardcoded strings
+const aiLabel = computed(() => 'AI');
 </script>
 
 <template>
@@ -299,6 +306,13 @@ const deleteConversation = () => {
             {{ assignee.name }}
           </span>
           <PriorityMark :priority="chat.priority" class="flex-shrink-0" />
+          <span
+            v-if="isAIConversation"
+            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium bg-n-blue-9 text-white"
+          >
+            <fluent-icon icon="robot" size="10" />
+            {{ aiLabel }}
+          </span>
         </div>
       </div>
       <h4

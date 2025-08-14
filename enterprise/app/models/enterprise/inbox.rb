@@ -7,6 +7,10 @@ module Enterprise::Inbox
     super - overloaded_agent_ids
   end
 
+  def captain_show_pending_conversations?
+    captain_assistant&.config&.dig('show_pending_conversations') == true
+  end
+
   def active_bot?
     super || captain_active?
   end

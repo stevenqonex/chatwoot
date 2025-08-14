@@ -33,7 +33,17 @@ module Enterprise::Conversations::PermissionFilterService
     mine = accessible_conversations.assigned_to(user)
     unassigned = accessible_conversations.unassigned
 
-    Conversation.from("(#{mine.to_sql} UNION #{unassigned.to_sql}) as conversations")
-                .where(account_id: account.id)
+    # Include pending conversations if Captain AI is configured to show them
+    if user.inboxes.any? { |inbox| inbox.captain_show_pending_conversations? }
+      pending = accessible_conversations.pending_unassigned
+      all_conversations = mine.or(unassigned).or(pending)
+      
+      Conversation.from("(#{all_conversations.to_sql}) as conversations")
+                  .where(account_id: account.id)
+    else
+      # Original behavior
+      Conversation.from("(#{mine.to_sql} UNION #{unassigned.to_sql}) as conversations")
+                  .where(account_id: account.id)
+    end
   end
 end

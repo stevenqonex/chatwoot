@@ -22,6 +22,7 @@ const initialState = {
   handoffMessage: '',
   resolutionMessage: '',
   temperature: 1,
+  showPendingConversations: false,
 };
 
 const state = reactive({ ...initialState });
@@ -47,6 +48,7 @@ const updateStateFromAssistant = assistant => {
   state.handoffMessage = config.handoff_message;
   state.resolutionMessage = config.resolution_message;
   state.temperature = config.temperature || 1;
+  state.showPendingConversations = config.show_pending_conversations || false;
 };
 
 const handleSystemMessagesUpdate = async () => {
@@ -62,6 +64,7 @@ const handleSystemMessagesUpdate = async () => {
       handoff_message: state.handoffMessage,
       resolution_message: state.resolutionMessage,
       temperature: state.temperature || 1,
+      show_pending_conversations: state.showPendingConversations,
     },
   };
 
@@ -74,6 +77,15 @@ watch(
     if (newAssistant) updateStateFromAssistant(newAssistant);
   },
   { immediate: true }
+);
+
+// Add these computed properties
+const checkboxLabel = computed(
+  () => 'Show AI conversations in unassigned dashboard'
+);
+const checkboxDescription = computed(
+  () =>
+    'When enabled, conversations being handled by Captain AI will be visible to agents in the unassigned dashboard with "AI Responding" status.'
 );
 </script>
 
@@ -112,6 +124,22 @@ watch(
       </div>
       <p class="text-sm text-n-slate-11 italic">
         {{ t('CAPTAIN.ASSISTANTS.FORM.TEMPERATURE.DESCRIPTION') }}
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label class="flex items-center gap-2">
+        <input
+          v-model="state.showPendingConversations"
+          type="checkbox"
+          class="rounded border-n-slate-7 text-n-slate-12 focus:ring-n-slate-8"
+        />
+        <span class="text-sm font-medium text-n-slate-12">
+          {{ checkboxLabel }}
+        </span>
+      </label>
+      <p class="text-sm text-n-slate-11 italic">
+        {{ checkboxDescription }}
       </p>
     </div>
 

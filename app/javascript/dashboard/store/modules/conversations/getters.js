@@ -98,8 +98,12 @@ const getters = {
   getUnAssignedChats: _state => activeFilters => {
     return _state.allConversations.filter(conversation => {
       const isUnAssigned = !conversation.meta.assignee;
+      const isPendingUnassigned =
+        conversation.status === 'pending' && !conversation.meta.assignee;
       const shouldFilter = applyPageFilters(conversation, activeFilters);
-      return isUnAssigned && shouldFilter;
+
+      // Show both unassigned and pending unassigned conversations
+      return (isUnAssigned || isPendingUnassigned) && shouldFilter;
     });
   },
   getAllStatusChats: (_state, _, __, rootGetters) => activeFilters => {

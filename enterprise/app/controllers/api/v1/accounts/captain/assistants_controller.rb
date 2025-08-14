@@ -51,7 +51,7 @@ class Api::V1::Accounts::Captain::AssistantsController < Api::V1::Accounts::Base
                                                   config: [
                                                     :product_name, :feature_faq, :feature_memory,
                                                     :welcome_message, :handoff_message, :resolution_message,
-                                                    :instructions, :temperature
+                                                    :instructions, :temperature, :show_pending_conversations
                                                   ])
 
     # Handle array parameters separately to allow partial updates
