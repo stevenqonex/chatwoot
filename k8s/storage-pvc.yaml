@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: chatwoot-storage-pvc
+  namespace: chatwoot
+spec:
+  accessModes:
+    - ReadWriteMany  # Allows multiple pods to read/write
+  resources:
+    requests:
+      storage: 10Gi
+  # Optional: Specify storage class for your cluster
+  # storageClassName: fast-ssd 

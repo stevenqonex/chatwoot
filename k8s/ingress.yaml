@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chatwoot-ingress
+  namespace: chatwoot
+  annotations:
+    # Essential: Force HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    
+    # Essential: File upload support (Chatwoot handles attachments)
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    
+    # Essential: WebSocket support for ActionCable (real-time messaging)
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Connection $http_connection;
+      proxy_set_header Upgrade $http_upgrade;
+      
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - chatwoot.yourdomain.com
+    secretName: chatwoot-tls
+  rules:
+  - host: chatwoot.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: chatwoot-web
+            port:
+              number: 3000 

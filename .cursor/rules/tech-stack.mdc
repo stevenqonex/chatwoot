@@ -1,0 +1,218 @@
+---
+description: Comprehensive tech stack overview for Chatwoot with versions and best practices
+globs: **/*
+alwaysApply: true
+---
+
+# Chatwoot Tech Stack Guide
+
+## Core Technologies Overview
+
+Chatwoot is a modern customer support platform built with a Ruby on Rails backend and Vue.js frontend, designed for scalability and real-time communication.
+
+## Backend Stack (Ruby/Rails)
+
+### Core Framework
+- **Ruby**: `3.4.4` (Latest stable)
+  - ✅ Best Practice: Use latest stable Ruby for performance and security
+  - ⚠️ Note: Ruby 3.4.4 is very recent - ensure compatibility with all gems
+- **Rails**: `~> 7.1` (Latest major version)
+  - ✅ Best Practice: Rails 7.1 provides modern features and performance improvements
+  - Use Rails conventions and follow MVC pattern
+
+### Database & Caching
+- **PostgreSQL**: Primary database with `pg` gem
+  - ✅ Best Practice: Use PostgreSQL for ACID compliance and advanced features
+  - Includes `pg_search` for full-text search capabilities
+  - Uses `pgvector` for vector similarity (AI features)
+- **Redis**: Caching and session storage via `redis` gem
+  - ✅ Best Practice: Redis for high-performance caching and real-time features
+  - Uses `redis-namespace` for multi-tenancy
+
+### Background Processing
+- **Sidekiq**: `>= 7.3.1` for background jobs
+  - ✅ Best Practice: Sidekiq 7.x provides better performance and memory usage
+  - Includes `sidekiq-cron` for scheduled jobs
+  - Uses Redis as the job queue backend
+
+### Authentication & Authorization
+- **Devise**: `>= 4.9.4` for authentication
+  - ✅ Best Practice: Devise 4.9.4+ includes important security updates
+  - Uses `devise_token_auth` for API authentication
+- **JWT**: For token-based authentication
+- **Pundit**: For authorization policies
+- **Omniauth**: For OAuth integrations (Google, etc.)
+
+### Web Server & Infrastructure
+- **Puma**: Multi-threaded web server
+  - ✅ Best Practice: Puma is Rails' default and recommended server
+- **Vite Rails**: `vite_rails` for modern asset pipeline
+  - ✅ Best Practice: Vite provides faster builds than Webpacker
+- **Rack CORS**: `2.0.0` for cross-origin requests
+- **Rack Attack**: `>= 6.7.0` for rate limiting and abuse prevention
+
+### Storage & File Processing
+- **Active Storage**: Rails' built-in file storage
+- **AWS S3**: `aws-sdk-s3` for cloud storage
+- **Azure Storage**: Custom fork for Azure blob storage
+- **Google Cloud Storage**: `>= 1.48.0` for GCP storage
+- **Image Processing**: For image manipulation and optimization
+
+### Communication & Integrations
+- **ActionCable**: For real-time WebSocket connections
+- **Twilio**: `~> 5.66` for SMS/voice communication
+- **Facebook Messenger**: `facebook-messenger` for FB integration
+- **Slack**: `slack-ruby-client ~> 2.5.2` for Slack integration
+- **Email**: `gmail_xoauth` for OAuth email access
+
+### Monitoring & Error Tracking
+- **Sentry**: `>= 5.19.0` for error monitoring
+  - ✅ Best Practice: Use Sentry for production error tracking
+- **New Relic**: Optional APM monitoring
+- **Elastic APM**: Alternative monitoring option
+- **Datadog**: `ddtrace` for distributed tracing
+
+### Payment Processing
+- **Stripe**: For subscription and payment processing
+  - ✅ Best Practice: Stripe for reliable payment processing
+
+### Search & AI
+- **PG Search**: Full-text search using PostgreSQL
+- **Neighbor**: Vector similarity search
+- **OpenAI**: `ruby-openai` for AI integrations
+- **Dialogflow**: `google-cloud-dialogflow-v2` for chatbot integration
+
+## Frontend Stack (JavaScript/Vue.js)
+
+### Core Framework
+- **Vue.js**: `^3.5.12` (Composition API support)
+  - ✅ Best Practice: Vue 3.5.x provides excellent performance and developer experience
+  - Uses Composition API for modern component development
+- **Vue Router**: `~4.4.5` for client-side routing
+- **Vuex**: `~4.1.0` for state management
+  - ⚠️ Note: Consider migrating to Pinia for better TypeScript support
+
+### Build Tools & Development
+- **Vite**: `^5.4.19` for fast development and building
+  - ✅ Best Practice: Vite 5.x provides excellent performance
+  - Uses `@vitejs/plugin-vue` for Vue.js support
+- **Node.js**: `23.x` (Latest version)
+  - ⚠️ Note: Node 23.x is very recent - ensure all dependencies are compatible
+- **pnpm**: `10.x` as package manager
+  - ✅ Best Practice: pnpm for efficient package management
+
+### Styling & UI
+- **TailwindCSS**: `^3.4.13` for utility-first CSS
+  - ✅ Best Practice: TailwindCSS 3.x provides modern CSS features
+  - Uses `@tailwindcss/typography` for content styling
+- **PostCSS**: `^8.4.47` for CSS processing
+- **Radix Colors**: `^3.0.0` for consistent color system
+- **Flag Icons**: `^7.2.3` for country flags
+
+### Component Libraries & UI
+- **Floating Vue**: `^5.2.2` for tooltips and popovers
+- **Vue Multiselect**: `3.1.0` for select components
+- **Vue Upload Component**: `^3.1.17` for file uploads
+- **Vue Datepicker**: `^1.0.3` for date selection
+- **Chart.js**: `~4.4.4` with `vue-chartjs 5.3.1` for charts
+
+### Utilities & Helpers
+- **VueUse**: `^12.0.0` for composition utilities
+  - ✅ Best Practice: VueUse provides excellent composition API utilities
+- **Axios**: `^1.8.2` for HTTP requests
+- **Date-fns**: `2.21.1` for date manipulation
+- **DOMPurify**: `3.2.4` for HTML sanitization
+- **Lodash**: Various utilities for data manipulation
+
+### Development Tools
+- **Vite**: `^5.4.19` for development server
+- **Vitest**: `3.0.5` for testing
+  - ✅ Best Practice: Vitest integrates well with Vite
+- **ESLint**: `^8.57.0` for code linting
+- **Prettier**: `^3.3.3` for code formatting
+- **Histoire**: `0.17.15` for component documentation (Storybook alternative)
+
+### Real-time & Media
+- **ActionCable**: `6.1.3` for WebSocket connections
+- **Video.js**: `7.18.1` for video playback
+- **Opus Recorder**: `^8.0.5` for audio recording
+- **Wavesurfer.js**: `7.8.6` for audio visualization
+
+## Testing Stack
+
+### Backend Testing
+- **RSpec**: `>= 6.1.5` for behavior-driven testing
+- **Factory Bot**: `>= 6.4.3` for test data generation
+- **Shoulda Matchers**: For Rails-specific matchers
+- **Database Cleaner**: For test database cleanup
+- **WebMock**: For HTTP request mocking
+
+### Frontend Testing
+- **Vitest**: `3.0.5` for unit testing
+- **Vue Test Utils**: `^2.4.6` for Vue component testing
+- **jsdom**: `^24.1.3` for DOM simulation
+- **Coverage**: `@vitest/coverage-v8` for test coverage
+
+## DevOps & Deployment
+
+### Process Management
+- **Foreman**: For managing development processes
+- **Overmind**: Alternative process manager
+- **Sidekiq**: Background job processing
+
+### Monitoring & Performance
+- **Barnes**: Heroku metrics
+- **Rack Mini Profiler**: Development profiling
+- **Bullet**: N+1 query detection
+- **Bundle Audit**: Security vulnerability scanning
+
+### Security & Compliance
+- **Brakeman**: Static security analysis
+- **Audited**: `~> 5.4` for audit logging
+- **RuboCop**: Code quality and style enforcement
+
+## Best Practices & Recommendations
+
+### Version Management
+- ✅ **Keep dependencies updated**: Regular updates for security and performance
+- ✅ **Pin major versions**: Use `~>` for minor updates, exact versions for critical deps
+- ✅ **Test thoroughly**: Especially with newer versions like Ruby 3.4.4 and Node 23.x
+
+### Performance Optimization
+- ✅ **Use Vite**: Faster than Webpacker for asset compilation
+- ✅ **Leverage Redis**: For caching and session storage
+- ✅ **Background jobs**: Use Sidekiq for heavy processing
+- ✅ **Database indexing**: Proper indexing for PostgreSQL queries
+
+### Security Best Practices
+- ✅ **Keep Devise updated**: Latest versions include security fixes
+- ✅ **Use Sentry**: For production error monitoring
+- ✅ **Rate limiting**: Rack Attack for API protection
+- ✅ **Input sanitization**: DOMPurify for frontend, Rails built-ins for backend
+
+### Development Workflow
+- ✅ **Use pnpm**: More efficient than npm/yarn
+- ✅ **Vitest over Jest**: Better Vite integration
+- ✅ **Histoire over Storybook**: Lighter alternative for component docs
+- ✅ **Composition API**: Modern Vue.js development pattern
+
+### Migration Considerations
+- ⚠️ **Vuex to Pinia**: Consider migrating for better TypeScript support
+- ⚠️ **Node 23.x**: Ensure all dependencies are compatible
+- ⚠️ **Ruby 3.4.4**: Test thoroughly with all gems
+
+## Architecture Patterns
+
+### Backend Patterns
+- **MVC**: Standard Rails Model-View-Controller
+- **Service Objects**: Business logic in `app/services/`
+- **Background Jobs**: Async processing with Sidekiq
+- **Event-Driven**: Wisper for pub/sub patterns
+
+### Frontend Patterns
+- **Component-Based**: Vue.js single-file components
+- **Composition API**: Modern Vue.js development
+- **Module Federation**: Separate apps (dashboard, widget, portal)
+- **State Management**: Vuex for global state
+
+This stack provides a modern, scalable foundation for a real-time customer support platform with excellent developer experience and production reliability.

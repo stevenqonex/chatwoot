@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chatwoot-config
+  namespace: chatwoot
+data:
+  # Rails and Node environment
+  RAILS_ENV: "production"
+  NODE_ENV: "production"
+  INSTALLATION_ENV: "kubernetes"
+  
+  # Logging and debugging
+  RAILS_LOG_TO_STDOUT: "true"
+  RAILS_SERVE_STATIC_FILES: "true"
+  LOG_LEVEL: "info"
+  
+  # Performance tuning
+  RAILS_MAX_THREADS: "5"
+  SIDEKIQ_CONCURRENCY: "10"
+  DB_POOL_REAPING_FREQUENCY: "30"
+  POSTGRES_STATEMENT_TIMEOUT: "14s"
+  
+  # Database configuration
+  POSTGRES_HOST: "chatwoot-postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DATABASE: "chatwoot_production"
+  POSTGRES_USERNAME: "chatwoot_prod"
+  
+  # Redis configuration
+  REDIS_URL: "redis://chatwoot-redis:6379"
+  
+  # Application URLs (update with your domain)
+  FRONTEND_URL: "https://chatwoot.yourdomain.com"
+  
+  # Storage configuration
+  ACTIVE_STORAGE_SERVICE: "local"
+  
+  # Email configuration
+  SMTP_ADDRESS: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  SMTP_AUTHENTICATION: "login"
+  SMTP_ENABLE_STARTTLS_AUTO: "true"
+  SMTP_SSL: "true"
+  SMTP_TLS: "true"
+  
+  # Security
+  FORCE_SSL: "true"
+  
+  # Feature flags
+  DISABLE_TELEMETRY: "true"
