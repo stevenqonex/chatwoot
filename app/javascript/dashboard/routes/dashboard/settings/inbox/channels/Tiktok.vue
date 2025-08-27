@@ -1,59 +1,54 @@
-<script>
-import { useVuelidate } from '@vuelidate/core';
-import { useAccount } from 'dashboard/composables/useAccount';
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import tiktokClient from 'dashboard/api/channel/tiktokClient';
 
-export default {
-  setup() {
-    const { accountId } = useAccount();
-    return {
-      accountId,
-      v$: useVuelidate(),
-    };
-  },
-  data() {
-    return {
-      isCreating: false,
-      hasError: false,
-      errorStateMessage: '',
-      errorStateDescription: '',
-      isRequestingAuthorization: false,
-    };
-  },
+const { t } = useI18n();
+const hasError = ref(false);
+const errorStateMessage = ref('');
+const errorStateDescription = ref('');
+const isRequestingAuthorization = ref(false);
 
-  mounted() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const errorCode = urlParams.get('code');
-    const errorMessage = urlParams.get('error_message');
+// Computed properties for TikTok limitations to avoid ESLint errors
+const limitationsTitle = computed(
+  () => 'TikTok Business Messaging Limitations:'
+);
+const limitations = computed(() => [
+  '48-hour messaging window with 10 message limit per window',
+  'Text messages limited to 6,000 characters',
+  'Only JPG/PNG images up to 3MB supported',
+  'Video and voice messages not supported',
+  'Not available for US organizations',
+]);
 
-    if (errorMessage) {
-      this.hasError = true;
-      if (errorCode === '400') {
-        this.errorStateMessage = errorMessage;
-        this.errorStateDescription = this.$t(
-          'INBOX_MGMT.ADD.TIKTOK.ERROR_AUTH'
-        );
-      } else {
-        this.errorStateMessage = this.$t('INBOX_MGMT.ADD.TIKTOK.ERROR_MESSAGE');
-        this.errorStateDescription = errorMessage;
-      }
+onMounted(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const errorCode = urlParams.get('code');
+  const errorMessage = urlParams.get('error_message');
+
+  if (errorMessage) {
+    hasError.value = true;
+    if (errorCode === '400') {
+      errorStateMessage.value = errorMessage;
+      errorStateDescription.value = t('INBOX_MGMT.ADD.TIKTOK.ERROR_AUTH');
+    } else {
+      errorStateMessage.value = t('INBOX_MGMT.ADD.TIKTOK.ERROR_MESSAGE');
+      errorStateDescription.value = errorMessage;
     }
-    // User need to remove the error params from the url to avoid the error to be shown again after page reload
-    const cleanURL = window.location.pathname;
-    window.history.replaceState({}, document.title, cleanURL);
-  },
+  }
+  // User need to remove the error params from the url to avoid the error to be shown again after page reload
+  const cleanURL = window.location.pathname;
+  window.history.replaceState({}, document.title, cleanURL);
+});
 
-  methods: {
-    async requestAuthorization() {
-      this.isRequestingAuthorization = true;
-      const response = await tiktokClient.generateAuthorization();
-      const {
-        data: { url },
-      } = response;
+const requestAuthorization = async () => {
+  isRequestingAuthorization.value = true;
+  const response = await tiktokClient.generateAuthorization();
+  const {
+    data: { url },
+  } = response;
 
-      window.location.href = url;
-    },
-  },
+  window.location.href = url;
 };
 </script>
 
@@ -79,6 +74,23 @@ export default {
         <p class="py-6 text-sm text-n-slate-11">
           {{ $t('INBOX_MGMT.ADD.TIKTOK.HELP') }}
         </p>
+
+        <!-- TikTok Limitations Warning -->
+        <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div class="flex items-start">
+            <span
+              class="i-ri-information-line size-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0"
+            />
+            <div class="text-sm text-yellow-800">
+              <p class="font-medium mb-2">{{ limitationsTitle }}</p>
+              <ul class="list-disc list-inside space-y-1 text-xs">
+                <li v-for="limitation in limitations" :key="limitation">
+                  {{ limitation }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
         <button
           class="flex items-center justify-center px-8 py-3.5 gap-2 text-white rounded-full bg-gradient-to-r from-[#000000] to-[#25F4EE] hover:shadow-lg transition-all duration-300 min-w-[240px] overflow-hidden"
           :disabled="isRequestingAuthorization"

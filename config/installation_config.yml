@@ -151,9 +151,11 @@
 # ------- End of WhatsApp Channel Related Config ------- #
 
 # ------- TikTok Channel Related Config ------- #
+# Note: TikTok Business Messaging is not available for US organizations
+# Limited functionality in EEA, Switzerland, and UK
 - name: TIKTOK_APP_ID
   display_title: 'TikTok App ID'
-  description: 'The TikTok App ID for Business Messaging API integration'
+  description: 'The TikTok App ID for Business Messaging API integration. Note: Not available for US organizations.'
   locked: false
 - name: TIKTOK_APP_SECRET
   display_title: 'TikTok App Secret'

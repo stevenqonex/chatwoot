@@ -98,7 +98,14 @@ class Tiktok::CallbacksController < ApplicationController
       expires_at: expires_at
     )
 
-    channel_tiktok.inbox.update!(name: user_details['business_name'])
+    # Extract business name from TikTok response
+    business_name = user_details['business_name'] || 
+                   user_details['name'] || 
+                   user_details['display_name'] ||
+                   user_details['username'] ||
+                   'TikTok Business'
+
+    channel_tiktok.inbox.update!(name: business_name)
     channel_tiktok
   end
 
@@ -106,9 +113,22 @@ class Tiktok::CallbacksController < ApplicationController
     ActiveRecord::Base.transaction do
       expires_at = Time.current + @response.token.expires_in.seconds
 
+      # Extract business ID from TikTok response - it might be in different fields
+      business_id = user_details['business_id'] || 
+                   user_details['id'] || 
+                   user_details['user_id'] ||
+                   user_details['account_id']
+      
+      # Extract business name from TikTok response
+      business_name = user_details['business_name'] || 
+                     user_details['name'] || 
+                     user_details['display_name'] ||
+                     user_details['username'] ||
+                     'TikTok Business'
+
       channel_tiktok = Channel::Tiktok.create!(
         access_token: @response.token.token,
-        business_id: user_details['business_id'].to_s,
+        business_id: business_id.to_s,
         account: account,
         expires_at: expires_at
       )
@@ -116,7 +136,7 @@ class Tiktok::CallbacksController < ApplicationController
       account.inboxes.create!(
         account: account,
         channel: channel_tiktok,
-        name: user_details['business_name']
+        name: business_name
       )
 
       channel_tiktok
@@ -124,28 +144,50 @@ class Tiktok::CallbacksController < ApplicationController
   end
 
   def fetch_tiktok_user_details(access_token)
-    endpoint = 'https://business-api.tiktok.com/business/v1.3/account/info'
+    endpoint = 'https://business-api.tiktok.com/open_api/v1.3/business/account/info'
     params = {
       access_token: access_token
     }
 
-    make_api_request(endpoint, params, 'Failed to fetch TikTok user details')
+    Rails.logger.info "[TIKTOK] Fetching user details from: #{endpoint}"
+    user_details = make_api_request(endpoint, params, 'Failed to fetch TikTok user details')
+    Rails.logger.info "[TIKTOK] User details received: #{user_details.inspect}"
+    
+    user_details
   end
 
   def make_api_request(endpoint, params, error_prefix)
+    headers = {
+      'Accept' => 'application/json',
+      'Access-Token' => params[:access_token]
+    }
+
+    # Remove access_token from query params since it's now in headers
+    query_params = params.except(:access_token)
+
     response = HTTParty.get(
       endpoint,
-      query: params,
-      headers: { 'Accept' => 'application/json' }
+      query: query_params,
+      headers: headers,
+      timeout: 30
     )
 
     unless response.success?
       Rails.logger.error "#{error_prefix}. Status: #{response.code}, Body: #{response.body}"
-      raise "#{error_prefix}: #{response.body}"
+      raise "#{error_prefix}: HTTP #{response.code} - #{response.body}"
     end
 
     begin
-      JSON.parse(response.body)
+      parsed_response = JSON.parse(response.body)
+      
+      # Check for TikTok API errors in the response body
+      if parsed_response['error']
+        error_msg = parsed_response.dig('error', 'message') || parsed_response.dig('error', 'log_id') || 'Unknown TikTok API error'
+        error_code = parsed_response.dig('error', 'code') || 'UNKNOWN'
+        raise "#{error_prefix}: #{error_code} - #{error_msg}"
+      end
+      
+      parsed_response
     rescue JSON::ParserError => e
       ChatwootExceptionTracker.new(e).capture_exception
       Rails.logger.error "Invalid JSON response: #{response.body}"

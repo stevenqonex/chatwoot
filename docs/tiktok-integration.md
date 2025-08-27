@@ -16,7 +16,13 @@ The integration follows Chatwoot's established channel architecture patterns:
 
 ```
 Channel::Tiktok (Model)
-├── Tiktok::Providers::TiktokBusinessService (Provider Service)
+├── Tiktok::BaseService (Shared API utilities)
+├── Tiktok::Providers::BaseService (Provider base class)
+│   └── Tiktok::Providers::TiktokBusinessService (Provider Service)
+├── Tiktok::ConversationService (Conversation Management)
+├── Tiktok::ImageUploadService (Media Upload)
+├── Tiktok::ImageDownloadService (Media Download)
+├── Tiktok::MessageLimitService (Message Limits)
 ├── Tiktok::WebhookSetupService (Webhook Management)
 ├── Tiktok::IncomingMessageService (Incoming Message Processing)
 ├── Tiktok::SendOnTiktokService (Outgoing Message Service)
@@ -36,12 +42,17 @@ TIKTOK_APP_SECRET=your_tiktok_app_secret
 TIKTOK_WEBHOOK_VERIFY_TOKEN=your_webhook_verify_token
 ```
 
+**Note**: The `TIKTOK_APP_ID` is automatically included in API headers for proper authentication.
+
 ### 2. TikTok App Configuration
 
 1. Create a TikTok Developer account at [TikTok for Developers](https://developers.tiktok.com/)
 2. Create a new app with Business Messaging API permissions
 3. Configure OAuth redirect URI: `https://your-domain.com/tiktok/callback`
-4. Note down your App ID and App Secret
+4. Enable the following scopes:
+   - `user.info.basic` - Basic user information access
+   - `business.messaging` - Business messaging permissions (includes send/receive)
+5. Note down your App ID and App Secret
 
 ### 3. Webhook Configuration
 
@@ -53,9 +64,43 @@ Configure your TikTok app webhook endpoint:
 
 ### Message Types Supported
 
-- **Text Messages**: Standard text conversations
-- **Media Messages**: Images, videos, audio, and files
-- **Interactive Elements**: Buttons and quick replies (future enhancement)
+- **Text Messages**: Standard text conversations (max 6,000 characters)
+- **Image Messages**: JPG and PNG formats only, up to 3MB
+- **Limitations**: Video and voice messages are not supported by TikTok Business API
+
+### Message Format
+
+The TikTok API expects messages in the following format:
+
+**Text Messages:**
+```json
+{
+  "to_user_id": "recipient_id",
+  "message_type": "text",
+  "content": {
+    "text": "message_content"
+  }
+}
+```
+
+**Image Messages (with media_id):**
+```json
+{
+  "to_user_id": "recipient_id",
+  "message_type": "image",
+  "content": {
+    "image": {
+      "media_id": "uploaded_media_id",
+      "caption": "Optional caption"
+    }
+  }
+}
+```
+
+**Authentication Header:**
+```
+Access-Token: your_access_token
+```
 
 ### OAuth Flow
 
@@ -73,6 +118,13 @@ The integration uses OAuth 2.0 for secure authentication:
 - Messages are parsed and converted to Chatwoot format
 - Contacts and conversations are automatically created/updated
 
+### TikTok-Specific Constraints
+
+- **Message Window**: 48-hour window after receiving a user message
+- **Message Limit**: Maximum 10 messages per 48-hour window
+- **Rate Limits**: 10 queries per second (QPS) for messaging operations
+- **Regional Limitations**: Not available for US organizations; Limited functionality in EEA, Switzerland, and UK
+
 ## API Endpoints
 
 ### Webhook Endpoint
@@ -84,6 +136,36 @@ POST /webhooks/tiktok
 ```
 POST /api/v1/accounts/:account_id/tiktok/authorization
 GET  /tiktok/callback
+```
+
+### TikTok API Endpoints
+```
+GET  /open_api/v1.3/business/account/info
+POST /open_api/v1.3/business/message/send/
+```
+
+### API Base URL
+```
+https://business-api.tiktok.com/open_api/v1.3
+```
+
+### Complete Endpoint URLs
+```
+# Authentication
+POST https://business-api.tiktok.com/open_api/v1.3/oauth/authorize/
+POST https://business-api.tiktok.com/open_api/v1.3/oauth/access_token/
+
+# Account & Business
+GET  https://business-api.tiktok.com/open_api/v1.3/business/account/info
+
+# Messaging
+POST https://business-api.tiktok.com/open_api/v1.3/business/message/send/
+GET  https://business-api.tiktok.com/open_api/v1.3/business/conversation/list/
+GET  https://business-api.tiktok.com/open_api/v1.3/business/message/list/
+
+# Media
+POST https://business-api.tiktok.com/open_api/v1.3/business/media/upload/
+GET  https://business-api.tiktok.com/open_api/v1.3/business/media/download/
 ```
 
 ## Database Schema

@@ -1,6 +1,7 @@
 class Conversations::MessageWindowService
   MESSAGING_WINDOW_24_HOURS = 24.hours
   MESSAGING_WINDOW_7_DAYS = 7.days
+  MESSAGING_WINDOW_48_HOURS = 48.hours
 
   def initialize(conversation)
     @conversation = conversation
@@ -25,7 +26,7 @@ class Conversations::MessageWindowService
     when 'Channel::Whatsapp'
       MESSAGING_WINDOW_24_HOURS
     when 'Channel::Tiktok'
-      MESSAGING_WINDOW_24_HOURS
+      MESSAGING_WINDOW_48_HOURS
     when 'Channel::TwilioSms'
       twilio_messaging_window
     end

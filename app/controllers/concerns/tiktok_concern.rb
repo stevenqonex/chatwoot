@@ -1,7 +1,7 @@
 module TiktokConcern
   extend ActiveSupport::Concern
 
-  REQUIRED_SCOPES = %w[user.info.basic chat.message].freeze
+  REQUIRED_SCOPES = %w[user.info.basic business.messaging].freeze
 
   def tiktok_client
     ::OAuth2::Client.new(
@@ -9,8 +9,8 @@ module TiktokConcern
       client_secret,
       {
         site: 'https://business-api.tiktok.com',
-        authorize_url: 'https://business-api.tiktok.com/oauth/authorize',
-        token_url: 'https://business-api.tiktok.com/oauth/access_token',
+        authorize_url: 'https://business-api.tiktok.com/open_api/v1.3/oauth/authorize/',
+        token_url: 'https://business-api.tiktok.com/open_api/v1.3/oauth/access_token/',
         auth_scheme: :request_body,
         token_method: :post
       }
