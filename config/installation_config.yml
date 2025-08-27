@@ -150,6 +150,23 @@
   locked: false
 # ------- End of WhatsApp Channel Related Config ------- #
 
+# ------- TikTok Channel Related Config ------- #
+- name: TIKTOK_APP_ID
+  display_title: 'TikTok App ID'
+  description: 'The TikTok App ID for Business Messaging API integration'
+  locked: false
+- name: TIKTOK_APP_SECRET
+  display_title: 'TikTok App Secret'
+  description: 'The TikTok App Secret for Business Messaging API integration'
+  locked: false
+  type: secret
+- name: TIKTOK_WEBHOOK_VERIFY_TOKEN
+  display_title: 'TikTok Webhook Verify Token'
+  description: 'The verify token used for TikTok webhook verification'
+  locked: false
+  type: secret
+# ------- End of TikTok Channel Related Config ------- #
+
 # MARK: Microsoft Email Channel Config
 - name: AZURE_APP_ID
   display_title: 'Azure App ID'

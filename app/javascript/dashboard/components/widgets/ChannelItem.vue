@@ -20,6 +20,9 @@ export default {
     hasInstagramConfigured() {
       return window.chatwootConfig?.instagramAppId;
     },
+    hasTiktokConfigured() {
+      return window.chatwootConfig?.tiktokAppId;
+    },
     isActive() {
       const { key } = this.channel;
       if (Object.keys(this.enabledFeatures).length === 0) {
@@ -41,6 +44,10 @@ export default {
         );
       }
 
+      if (key === 'tiktok') {
+        return this.enabledFeatures.channel_tiktok && this.hasTiktokConfigured;
+      }
+
       if (key === 'voice') {
         return this.enabledFeatures.channel_voice;
       }
@@ -54,6 +61,7 @@ export default {
         'telegram',
         'line',
         'instagram',
+        'tiktok',
         'voice',
       ].includes(key);
     },

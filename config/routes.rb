@@ -233,6 +233,10 @@ Rails.application.routes.draw do
             resource :authorization, only: [:create]
           end
 
+          namespace :tiktok do
+            resource :authorization, only: [:create]
+          end
+
           namespace :notion do
             resource :authorization, only: [:create]
           end
@@ -492,8 +496,13 @@ Rails.application.routes.draw do
   post 'webhooks/whatsapp/:phone_number', to: 'webhooks/whatsapp#process_payload'
   get 'webhooks/instagram', to: 'webhooks/instagram#verify'
   post 'webhooks/instagram', to: 'webhooks/instagram#events'
+  post 'webhooks/tiktok', to: 'webhooks/tiktok#process_payload'
 
   namespace :twitter do
+    resource :callback, only: [:show]
+  end
+
+  namespace :tiktok do
     resource :callback, only: [:show]
   end
 
@@ -513,6 +522,7 @@ Rails.application.routes.draw do
   get 'microsoft/callback', to: 'microsoft/callbacks#show'
   get 'google/callback', to: 'google/callbacks#show'
   get 'instagram/callback', to: 'instagram/callbacks#show'
+  get 'tiktok/callback', to: 'tiktok/callbacks#show'
   get 'notion/callback', to: 'notion/callbacks#show'
   # ----------------------------------------------------------------------
   # Routes for external service verifications
