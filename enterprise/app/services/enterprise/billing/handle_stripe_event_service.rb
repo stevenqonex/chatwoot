@@ -26,16 +26,22 @@ class Enterprise::Billing::HandleStripeEventService
   ENTERPRISE_PLAN_FEATURES = %w[audit_logs disable_branding saml].freeze
 
   def perform(event:)
-    @event = event
-
-    case @event.type
-    when 'customer.subscription.updated'
-      process_subscription_updated
-    when 'customer.subscription.deleted'
-      process_subscription_deleted
-    else
-      Rails.logger.debug { "Unhandled event type: #{event.type}" }
-    end
+    # DISABLED: Stripe billing events can reset enterprise features
+    # For development/self-hosted installations, we want to preserve enterprise settings
+    Rails.logger.info "HandleStripeEventService disabled - preserving enterprise settings"
+    return
+    
+    # Original code commented out for safety
+    # @event = event
+    # 
+    # case @event.type
+    # when 'customer.subscription.updated'
+    #   process_subscription_updated
+    # when 'customer.subscription.deleted'
+    #   process_subscription_deleted
+    # else
+    #   Rails.logger.debug { "Unhandled event type: #{event.type}" }
+    # end
   end
 
   private

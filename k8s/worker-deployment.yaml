@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatwoot-worker
+  namespace: chatwoot
+  labels:
+    app: chatwoot-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatwoot-worker
+  template:
+    metadata:
+      labels:
+        app: chatwoot-worker
+    spec:
+      containers:
+      - name: chatwoot-worker
+        image: your-registry/chatwoot:latest
+        envFrom:
+        - configMapRef:
+            name: chatwoot-config
+        - secretRef:
+            name: chatwoot-secrets
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: chatwoot-secrets
+              key: REDIS_PASSWORD
+        command: ["docker/entrypoints/rails.sh"]
+        args: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command:
+            - pgrep
+            - -f
+            - sidekiq
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - pgrep
+            - -f
+            - sidekiq
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        volumeMounts:
+        - name: storage
+          mountPath: /app/storage
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: chatwoot-storage-pvc
